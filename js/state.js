@@ -120,10 +120,38 @@ KKA.state = {
     if (saved) {
       try {
         this.data = JSON.parse(saved);
+        this.normalizeBab2Progress();
       } catch (e) {
         console.error("Error loading local state", e);
       }
     }
+  },
+
+  normalizeBab2Progress() {
+    const bab2 = this.data.bab2 || {};
+    const legacyKeys = {
+      linearsearch: 'linear',
+      binarysearch: 'binary',
+      bubblesort: 'bubble',
+      selectionsort: 'selection',
+      insertionsort: 'insertion'
+    };
+
+    Object.keys(legacyKeys).forEach(legacyKey => {
+      if (bab2[legacyKey] === true) bab2[legacyKeys[legacyKey]] = true;
+      delete bab2[legacyKey];
+    });
+
+    this.data.bab2 = {
+      stack: bab2.stack === true,
+      queue: bab2.queue === true,
+      array: bab2.array === true,
+      linear: bab2.linear === true,
+      binary: bab2.binary === true,
+      bubble: bab2.bubble === true,
+      selection: bab2.selection === true,
+      insertion: bab2.insertion === true
+    };
   },
   
   async saveToSupabase() {
@@ -150,6 +178,7 @@ KKA.state = {
           .single();
         if (data && data.data) {
           this.data = data.data;
+          this.normalizeBab2Progress();
           this.saveLocal();
         }
       } catch (e) {
@@ -173,7 +202,7 @@ KKA.state = {
   },
   
   getBab2Progress() {
-    const keys = Object.keys(this.data.bab2);
+    const keys = ['stack', 'queue', 'array', 'linear', 'binary', 'bubble', 'selection', 'insertion'];
     const completed = keys.filter(k => this.data.bab2[k] === true).length;
     return (completed / 8) * 100;
   },

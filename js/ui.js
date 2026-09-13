@@ -15,9 +15,21 @@ KKA.ui = {
     if (screenId === 'screen-bab2-hub') this.updateBab2Hub();
     if (screenId === 'screen-trophy') this.updateTrophyRoom();
     
-    // Call init hooks if available in bab modules
-    if (screenId.startsWith('screen-bab') && window.KKA[screenId.split('-')[1]]) {
-      const bab = window.KKA[screenId.split('-')[1]];
+    // Call init hooks if available in bab modules or subgame screens
+    if (screenId.startsWith('screen-bab')) {
+      const babKey = screenId.split('-')[1];
+      const bab = window.KKA && window.KKA[babKey];
+      if (!bab) return;
+
+      if (screenId.startsWith('screen-bab2-') && screenId !== 'screen-bab2-hub') {
+        const gameKey = screenId.replace('screen-bab2-', '');
+        const game = bab[gameKey];
+        if (game && typeof game.init === 'function') {
+          game.init();
+        }
+        return;
+      }
+
       if (typeof bab.init === 'function') bab.init();
     }
   },
@@ -169,9 +181,9 @@ KKA.ui = {
     keys.forEach(k => {
       const el = document.getElementById(`mg-${k}-status`);
       const card = document.getElementById(`mg-${k}`);
-      if (el && d[k]) {
-        el.innerText = '✅';
-        if (card) card.style.borderLeftColor = 'var(--secondary)';
+      if (el) {
+        el.innerText = d[k] ? '✅' : '⬜';
+        if (card) card.style.borderLeftColor = d[k] ? 'var(--secondary)' : '';
       }
     });
   },

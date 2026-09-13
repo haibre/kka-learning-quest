@@ -140,13 +140,31 @@ KKA.bab4 = {
   
   syntaxHighlight(text) {
     if (!text) return '';
-    return text
-      .replace(/"([^"]*)"/g, '<span class="py-string">"$1"</span>')
-      .replace(/\b(if|else|elif|for|in|and|or|not|def|return|True|False|while|import|from|class|try|except)\b/g, '<span class="py-keyword">$1</span>')
-      .replace(/\b(print|range|len|int|str|float|input|type)\b/g, '<span class="py-builtin">$1</span>')
-      .replace(/\b(\d+)\b/g, '<span class="py-number">$1</span>')
-      .replace(/(#.*)/g, '<span class="py-comment">$1</span>')
-      .replace(/(=|!=|==|>=|<=|>|<|\+|-|\*|\/|%)/g, '<span class="py-operator">$1</span>');
+    const escaped = this.escapeHtml(text);
+    return escaped.replace(
+      /("[^\"]*"|#.*|\b(?:if|else|elif|for|in|and|or|not|def|return|True|False|while|import|from|class|try|except)\b|\b(?:print|range|len|int|str|float|input|type)\b|\b\d+\b|!=|==|&gt;=|&lt;=|=|&gt;|&lt;|\+|-|\*|\/|%)/g,
+      match => {
+        if (match.startsWith('"')) return `<span class="py-string">${match}</span>`;
+        if (match.startsWith('#')) return `<span class="py-comment">${match}</span>`;
+        if (/^(if|else|elif|for|in|and|or|not|def|return|True|False|while|import|from|class|try|except)$/.test(match)) {
+          return `<span class="py-keyword">${match}</span>`;
+        }
+        if (/^(print|range|len|int|str|float|input|type)$/.test(match)) {
+          return `<span class="py-builtin">${match}</span>`;
+        }
+        if (/^\d+$/.test(match)) return `<span class="py-number">${match}</span>`;
+        return `<span class="py-operator">${match}</span>`;
+      }
+    );
+  },
+
+  escapeHtml(text) {
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   },
   
   check() {
@@ -176,7 +194,7 @@ KKA.bab4 = {
     terminal.style.display = 'block';
     
     if (allCorrect) {
-      output.innerHTML = puzzle.expectedOutput.replace(/\n/g, '<br>');
+      output.textContent = puzzle.expectedOutput;
       output.className = '';
       this.correctCount++;
       KKA.state.addXP(KKA.config.XP.PUZZLE_CORRECT);
@@ -211,7 +229,7 @@ KKA.bab4 = {
       result.innerHTML = `
         <div class="result-badge result-wrong" style="color: #dc3545; font-weight: bold; margin-bottom: 0.5rem;">❌ Kurang tepat!</div>
         <p>Jawaban yang benar: ${corrections.join(', ')}</p>
-        <p>Output seharusnya: <code>${puzzle.expectedOutput.replace(/\n/g, ' | ')}</code></p>
+        <p>Output seharusnya: <code>${this.escapeHtml(puzzle.expectedOutput.replace(/\n/g, ' | '))}</code></p>
         <button class="btn btn-primary" onclick="KKA.bab4.next()" style="margin-top:0.5rem">Lanjut →</button>
       `;
       

@@ -36,11 +36,58 @@ KKA.bab3 = {
       ],
       bot: { row: 0, col: 0, dir: 'down' },
       finish: { row: 3, col: 3 },
-      hint: 'Dekomposisi: pecah menjadi beberapa bagian kecil!'
+      hint: 'Pecah rute menjadi beberapa bagian kecil, lalu cari jalan keluarnya.'
     }
   ],
+  conceptQuestions: [
+    {
+      id: 'dekomposisi',
+      title: 'Soal 1',
+      question: 'Saat membuat aplikasi kantin, langkah mana yang paling membantu menyelesaikan masalah?',
+      options: ['Membagi pekerjaan menjadi menu, pembayaran, dan laporan', 'Memilih warna tombol', 'Menghapus semua fitur'],
+      answer: 0,
+      explanation: 'Masalah besar lebih mudah dikerjakan jika dibagi menjadi bagian-bagian kecil.'
+    },
+    {
+      id: 'pattern',
+      title: 'Soal 2',
+      question: 'Kamu melihat pelanggan selalu memilih menu yang sama setiap hari. Apa yang sedang kamu cari?',
+      options: ['Pola kebiasaan pelanggan', 'Kesalahan ejaan', 'Ukuran layar'],
+      answer: 0,
+      explanation: 'Kamu sedang menemukan kebiasaan atau kesamaan yang berulang.'
+    },
+    {
+      id: 'abstraksi',
+      title: 'Soal 3',
+      question: 'Untuk peta rute sekolah, informasi mana yang paling penting?',
+      options: ['Jalan dan tujuan utama', 'Warna semua rumah', 'Jumlah jendela setiap gedung'],
+      answer: 0,
+      explanation: 'Pilih informasi penting dan abaikan detail yang tidak diperlukan.'
+    },
+    {
+      id: 'algoritma',
+      title: 'Soal 4',
+      question: 'Manakah contoh langkah yang paling teratur untuk menyelesaikan masalah?',
+      options: ['Mengikuti langkah yang sudah diurutkan', 'Memilih hiasan terlebih dahulu', 'Menghapus semua langkah'],
+      answer: 0,
+      explanation: 'Langkah yang terurut membantu kita mencapai tujuan dengan jelas.'
+    }
+  ],
+  flowchartBlocks: [
+    { id: 'start', label: 'Mulai', icon: '🟢', type: 'terminator' },
+    { id: 'input', label: 'Masukkan nilai', icon: '📥', type: 'input' },
+    { id: 'decision', label: 'Nilai ≥ 75?', icon: '🔷', type: 'decision' },
+    { id: 'process', label: 'Tentukan status', icon: '⚙️', type: 'process' },
+    { id: 'output', label: 'Tampilkan hasil', icon: '📤', type: 'input' },
+    { id: 'end', label: 'Selesai', icon: '🔴', type: 'terminator' }
+  ],
+  flowchartExpected: ['start', 'input', 'decision', 'process', 'output', 'end'],
+  flowchartOrder: [],
   currentLevel: 0,
   instructions: [],
+  flowchartSteps: [],
+  conceptAnswers: {},
+  flowchartComplete: false,
   isRunning: false,
   
   init() {
@@ -50,6 +97,10 @@ KKA.bab3 = {
       this.showComplete();
       return;
     }
+    this.flowchartSteps = [];
+    this.conceptAnswers = {};
+    this.flowchartComplete = false;
+    this.shuffleFlowchartBlocks();
     this.renderLevel();
   },
   
@@ -61,8 +112,10 @@ KKA.bab3 = {
     
     container.innerHTML = `
       <div class="bot-education">
-        <p>🧠 <strong>Berpikir Komputasional</strong>: Pecah masalah besar menjadi langkah-langkah kecil (Dekomposisi), lalu susun algoritma untuk menyelesaikannya.</p>
+        <p>🧠 <strong>Berpikir Komputasional</strong>: Pecah masalah besar menjadi langkah-langkah kecil, lalu susun urutan penyelesaian yang jelas.</p>
       </div>
+      ${this.renderConceptQuestions()}
+      ${this.renderFlowchartGame()}
       <h3 style="text-align:center">${level.name}</h3>
       <div id="bot-grid" class="grid-4x4">
         ${this.renderGrid(level)}
@@ -85,6 +138,123 @@ KKA.bab3 = {
       <div id="bot-message" class="bot-message"></div>
     `;
     this.updateInstructionDisplay();
+  },
+
+  renderConceptQuestions() {
+    return `
+      <section class="concept-section">
+        <h3>🧠 Kenali Konsepnya</h3>
+        <p class="concept-intro">Jawab empat contoh soal singkat sebelum membantu bot.</p>
+        <div class="concept-grid">
+          ${this.conceptQuestions.map(question => `
+            <article class="concept-card" id="concept-${question.id}">
+              <h4>${question.title}</h4>
+              <p>${question.question}</p>
+              <div class="concept-options">
+                ${question.options.map((option, index) => `<button class="btn btn-outline concept-option" onclick="KKA.bab3.answerConcept('${question.id}', ${index})">${option}</button>`).join('')}
+              </div>
+              <div class="concept-feedback" id="concept-feedback-${question.id}"></div>
+            </article>
+          `).join('')}
+        </div>
+      </section>
+    `;
+  },
+
+  answerConcept(questionId, answerIndex) {
+    const question = this.conceptQuestions.find(item => item.id === questionId);
+    const feedback = document.getElementById(`concept-feedback-${questionId}`);
+    const card = document.getElementById(`concept-${questionId}`);
+    if (!question || !feedback || !card) return;
+
+    const isCorrect = answerIndex === question.answer;
+    this.conceptAnswers[questionId] = isCorrect;
+    feedback.textContent = isCorrect ? `✅ Benar! ${question.explanation}` : '❌ Belum tepat. Coba pilih jawaban lain.';
+    feedback.className = `concept-feedback ${isCorrect ? 'success' : 'error'}`;
+    card.querySelectorAll('.concept-option').forEach((button, index) => {
+      button.classList.toggle('correct', isCorrect && index === question.answer);
+      button.classList.toggle('wrong', !isCorrect && index === answerIndex);
+    });
+    if (isCorrect && Object.keys(this.conceptAnswers).length === this.conceptQuestions.length && Object.values(this.conceptAnswers).every(Boolean)) {
+      KKA.ui.showNotification('Semua konsep dipahami! Sekarang susun flowchart.', 'success');
+    }
+  },
+
+  renderFlowchartGame() {
+    const placed = this.flowchartSteps.map((id, index) => {
+      const block = this.flowchartBlocks.find(item => item.id === id);
+      return `<span class="flow-step flow-shape-${block.type}"><b>${index + 1}</b> ${block.icon} ${block.label}</span>`;
+    }).join('<span class="flow-arrow">→</span>');
+    const blocks = this.flowchartOrder.map(id => this.flowchartBlocks.find(block => block.id === id));
+    const available = blocks.map(block => `
+      <button class="btn btn-outline flow-block flow-shape-${block.type}" onclick="KKA.bab3.addFlowStep('${block.id}')" ${this.flowchartComplete ? 'disabled' : ''}>
+        ${block.icon} ${block.label}
+      </button>
+    `).join('');
+
+    return `
+      <section class="flowchart-section">
+        <h3>🔀 Game Flowchart Algoritma</h3>
+        <p>Buat alur untuk menentukan apakah seorang siswa lulus. Klik blok sesuai urutan algoritma.</p>
+        <div class="flow-sequence">${placed || '<span class="flow-empty">Belum ada blok. Mulai dari "Mulai".</span>'}</div>
+        <div class="flow-blocks">${available}</div>
+        <button class="btn btn-outline" onclick="KKA.bab3.resetFlowchart()">🗑️ Reset Flowchart</button>
+        <div id="flowchart-feedback" class="concept-feedback"></div>
+      </section>
+    `;
+  },
+
+  addFlowStep(blockId) {
+    if (this.flowchartComplete) return;
+    const expected = this.flowchartExpected[this.flowchartSteps.length];
+    const feedback = document.getElementById('flowchart-feedback');
+    if (blockId !== expected) {
+      if (feedback) {
+        feedback.textContent = '❌ Urutannya belum tepat. Pikirkan langkah berikutnya dari alur input → keputusan → output.';
+        feedback.className = 'concept-feedback error';
+      }
+      KKA.audio.playWrong();
+      return;
+    }
+
+    this.flowchartSteps.push(blockId);
+    const completed = this.flowchartSteps.length === this.flowchartExpected.length;
+    if (completed) {
+      this.flowchartComplete = true;
+      KKA.audio.playCorrect();
+      KKA.state.addXP(KKA.config.XP.BOT_FINISH);
+    }
+    this.refreshFlowchart();
+    if (completed) {
+      const refreshedFeedback = document.getElementById('flowchart-feedback');
+      if (refreshedFeedback) {
+        refreshedFeedback.textContent = '🎉 Flowchart benar! Alur algoritmamu sudah lengkap.';
+        refreshedFeedback.className = 'concept-feedback success';
+      }
+    }
+  },
+
+  resetFlowchart() {
+    this.flowchartSteps = [];
+    this.flowchartComplete = false;
+    this.shuffleFlowchartBlocks();
+    this.refreshFlowchart();
+  },
+
+  shuffleFlowchartBlocks() {
+    this.flowchartOrder = this.flowchartBlocks.map(block => block.id);
+    for (let index = this.flowchartOrder.length - 1; index > 0; index--) {
+      const randomIndex = Math.floor(Math.random() * (index + 1));
+      [this.flowchartOrder[index], this.flowchartOrder[randomIndex]] = [this.flowchartOrder[randomIndex], this.flowchartOrder[index]];
+    }
+  },
+
+  refreshFlowchart() {
+    const section = document.querySelector('.flowchart-section');
+    if (!section) return;
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = this.renderFlowchartGame();
+    section.replaceWith(wrapper.firstElementChild);
   },
   
   renderGrid(level) {
@@ -264,7 +434,7 @@ KKA.bab3 = {
         <h3>🎉 Bab 3 Selesai!</h3>
         <div class="summary-stars">⭐⭐⭐</div>
         <p>🤖 Badge Bot Commander diraih!</p>
-        <p>Kamu telah menguasai konsep Dekomposisi dan Algoritma!</p>
+        <p>Kamu telah menguasai cara memecah masalah dan menyusun langkah penyelesaian!</p>
         <button class="btn btn-primary" onclick="KKA.ui.showScreen('screen-dashboard')">Kembali ke Dashboard</button>
         <button class="btn btn-outline" onclick="KKA.bab3.reset()" style="margin-top:0.5rem">Main Lagi 🔄</button>
       </div>
