@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KKA Learning Quest — Dashboard Guru</title>
+  <style>
+    :root {
+      --bg-color: #121212;
+      --panel-bg: #1e1e1e;
+      --text-color: #e0e0e0;
+      --text-muted: #a0a0a0;
+      --primary-color: #00ffcc;
+      --primary-hover: #00cca3;
+      --danger-color: #ff4c4c;
+      --border-color: #333;
+      --card-bg: #252525;
+      --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: var(--font-family);
+      line-height: 1.6;
+    }
+
+    .guru-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    h1 {
+      margin-bottom: 0.5rem;
+      color: var(--primary-color);
+    }
+
+    /* Login Section */
+    #guru-login {
+      max-width: 400px;
+      margin: 100px auto;
+      background: var(--panel-bg);
+      padding: 2rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      text-align: center;
+    }
+
+    .config-section {
+      margin: 1rem 0;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+    .config-section label {
+      display: block;
+      margin-bottom: 0.25rem;
+      color: var(--text-muted);
+    }
+
+    input {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      background: var(--bg-color);
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
+      border-radius: 4px;
+    }
+    input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+    }
+
+    button {
+      background: var(--primary-color);
+      color: #000;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: var(--primary-hover);
+    }
+
+    #guru-error {
+      color: var(--danger-color);
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+
+    /* Dashboard Section */
+    .guru-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .guru-header button {
+      margin-left: 0.5rem;
+    }
+
+    .summary-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .summary-card {
+      background: var(--panel-bg);
+      padding: 1.5rem;
+      border-radius: 8px;
+      border-left: 4px solid var(--primary-color);
+      text-align: center;
+    }
+    .summary-value {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+    .summary-label {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+
+    .filter-bar {
+      margin-bottom: 1rem;
+    }
+    .filter-bar input {
+      max-width: 400px;
+      margin-bottom: 0;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+      background: var(--panel-bg);
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    th, td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    th {
+      background: var(--card-bg);
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+    th:hover {
+      color: var(--primary-color);
+    }
+    tr:hover td {
+      background: rgba(0, 255, 204, 0.05);
+    }
+    tr {
+      cursor: pointer;
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      background: var(--bg-color);
+      border-radius: 4px;
+      height: 8px;
+      margin-top: 4px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--primary-color);
+    }
+
+    /* Modal */
+    #student-modal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: var(--panel-bg);
+      padding: 2rem;
+      border-radius: 8px;
+      max-width: 500px;
+      width: 90%;
+      border: 1px solid var(--border-color);
+    }
+    .modal-content h3 {
+      margin-bottom: 1rem;
+      color: var(--primary-color);
+    }
+    .badge-item {
+      display: inline-block;
+      background: var(--card-bg);
+      padding: 0.5rem;
+      margin: 0.25rem;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+      font-size: 0.9rem;
+    }
+    .modal-content button {
+      margin-top: 1.5rem;
+      width: 100%;
+    }
+
+    @media (max-width: 768px) {
+      .guru-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="guru-container">
+    <!-- Login section -->
+    <div id="guru-login">
+      <h1>👩‍🏫 Dashboard Guru</h1>
+      <p style="margin-bottom:1.5rem; color:var(--text-muted);">KKA Learning Quest — Monitoring Progress Siswa</p>
+      
+      <div class="config-section">
+        <label>Supabase URL:</label>
+        <input type="text" id="guru-sb-url" placeholder="https://xxx.supabase.co" />
+        <label>Supabase Anon Key:</label>
+        <input type="text" id="guru-sb-key" placeholder="eyJ..." />
+      </div>
+      
+      <input type="email" id="guru-email" placeholder="Email Guru" />
+      <input type="password" id="guru-password" placeholder="Password" />
+      
+      <button onclick="guruLogin()" style="width:100%">Masuk 🔑</button>
+      <div id="guru-error" style="display:none"></div>
+    </div>
+
+    <!-- Dashboard section -->
+    <div id="guru-dashboard" style="display:none">
+      <div class="guru-header">
+        <h1>📊 Dashboard Guru — KKA Learning Quest</h1>
+        <div>
+          <button onclick="refreshData()">🔄 Refresh</button>
+          <button onclick="exportCSV()">📥 Export CSV</button>
+          <button onclick="guruLogout()" style="background:var(--danger-color); color:white;">Keluar 🚪</button>
+        </div>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="summary-cards">
+        <div class="summary-card">
+          <div class="summary-value" id="total-siswa">0</div>
+          <div class="summary-label">Total Siswa</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-value" id="avg-xp">0</div>
+          <div class="summary-label">Rata-rata XP</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-value" id="completed-all">0</div>
+          <div class="summary-label">Selesai Semua</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-value" id="avg-badges">0</div>
+          <div class="summary-label">Rata-rata Badge</div>
+        </div>
+      </div>
+
+      <!-- Search & Filter -->
+      <div class="filter-bar">
+        <input type="text" id="search-input" placeholder="🔍 Cari nama atau kelas..." oninput="filterTable()" />
+      </div>
+
+      <!-- Student Table -->
+      <div class="table-wrapper">
+        <table id="student-table">
+          <thead>
+            <tr>
+              <th onclick="sortTable(0)">No</th>
+              <th onclick="sortTable(1)">Nama ↕</th>
+              <th onclick="sortTable(2)">Kelas ↕</th>
+              <th onclick="sortTable(3)">XP ↕</th>
+              <th onclick="sortTable(4)">Level ↕</th>
+              <th onclick="sortTable(5)">Bab 1 ↕</th>
+              <th onclick="sortTable(6)">Bab 2 ↕</th>
+              <th onclick="sortTable(7)">Bab 3 ↕</th>
+              <th onclick="sortTable(8)">Bab 4 ↕</th>
+              <th onclick="sortTable(9)">Badge ↕</th>
+            </tr>
+          </thead>
+          <tbody id="student-tbody">
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Student Detail Modal -->
+      <div id="student-modal" style="display:none">
+        <div class="modal-content">
+          <h3 id="modal-student-name"></h3>
+          <p style="margin-bottom:1rem; color:var(--text-muted)">Daftar Badge yang Diperoleh:</p>
+          <div id="modal-badges"></div>
+          <button onclick="closeStudentModal()">Tutup</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    let supabaseClient = null;
+    let studentsData = [];
+    let currentSortCol = -1;
+    let currentSortAsc = true;
+
+    // Elements
+    const loginDiv = document.getElementById('guru-login');
+    const dashboardDiv = document.getElementById('guru-dashboard');
+    const errorDiv = document.getElementById('guru-error');
+    const tbody = document.getElementById('student-tbody');
+
+    // Attempt to load saved credentials
+    window.onload = () => {
+      const savedUrl = localStorage.getItem('guru_sb_url');
+      const savedKey = localStorage.getItem('guru_sb_key');
+      if (savedUrl) document.getElementById('guru-sb-url').value = savedUrl;
+      if (savedKey) document.getElementById('guru-sb-key').value = savedKey;
+    };
+
+    function showError(msg) {
+      errorDiv.textContent = msg;
+      errorDiv.style.display = 'block';
+    }
+
+    async function guruLogin() {
+      const url = document.getElementById('guru-sb-url').value.trim();
+      const key = document.getElementById('guru-sb-key').value.trim();
+      const email = document.getElementById('guru-email').value.trim();
+      const password = document.getElementById('guru-password').value;
+
+      if (!url || !key || !email || !password) {
+        showError("Harap lengkapi semua field.");
+        return;
+      }
+
+      try {
+        supabaseClient = supabase.createClient(url, key);
+        
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+          email: email,
+          password: password,
+        });
+
+        if (error) throw error;
+
+        // Verify role
+        const { data: profile, error: profileError } = await supabaseClient
+          .from('profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .single();
+
+        if (profileError) throw profileError;
+
+        if (profile.role !== 'guru') {
+          await supabaseClient.auth.signOut();
+          throw new Error("Akses ditolak. Akun ini bukan akun guru.");
+        }
+
+        // Save credentials
+        localStorage.setItem('guru_sb_url', url);
+        localStorage.setItem('guru_sb_key', key);
+
+        loginDiv.style.display = 'none';
+        dashboardDiv.style.display = 'block';
+        refreshData();
+
+      } catch (err) {
+        showError(err.message || "Gagal login. Periksa kembali kredensial.");
+      }
+    }
+
+    async function guruLogout() {
+      if (supabaseClient) {
+        await supabaseClient.auth.signOut();
+      }
+      dashboardDiv.style.display = 'none';
+      loginDiv.style.display = 'block';
+      document.getElementById('guru-password').value = '';
+      errorDiv.style.display = 'none';
+    }
+
+    async function refreshData() {
+      if (!supabaseClient) return;
+      try {
+        // Query profiles and join with progress
+        // According to RLS, teachers can view all
+        const { data, error } = await supabaseClient
+          .from('profiles')
+          .select(`
+            id, nama, kelas, role, updated_at,
+            progress ( data )
+          `)
+          .eq('role', 'siswa');
+
+        if (error) throw error;
+
+        studentsData = data.map(row => {
+          const pData = (row.progress && row.progress.length > 0) ? row.progress[0].data : {};
+          return {
+            nama: row.nama,
+            kelas: row.kelas || '-',
+            xp: pData.xp || 0,
+            level: pData.level || 1,
+            badges: pData.badges || [],
+            bab1: calculateBab1(pData.bab1),
+            bab2: calculateBab2(pData.bab2),
+            bab3: calculateBab3(pData.bab3),
+            bab4: calculateBab4(pData.bab4)
+          };
+        });
+
+        updateSummary();
+        renderTable(studentsData);
+
+      } catch (err) {
+        alert("Gagal mengambil data: " + err.message);
+      }
+    }
+
+    // Calculations based on JSON structure
+    function calculateBab1(b) {
+      if (!b) return 0;
+      if (b.completed) return 100;
+      if (b.total > 0) return Math.round((b.correct / b.total) * 100);
+      return 0;
+    }
+
+    function calculateBab2(b) {
+      if (!b) return 0;
+      const keys = ['stack', 'queue', 'array', 'linear', 'binary', 'bubble', 'selection', 'insertion'];
+      let done = 0;
+      keys.forEach(k => { if (b[k]) done++; });
+      return Math.round((done / 8) * 100);
+    }
+
+    function calculateBab3(b) {
+      if (!b) return 0;
+      if (b.completed) return 100;
+      const lvls = b.levelsCompleted ? b.levelsCompleted.length : 0;
+      return Math.round((lvls / 3) * 100);
+    }
+
+    function calculateBab4(b) {
+      if (!b) return 0;
+      if (b.completed) return 100;
+      if (b.total > 0) return Math.round((b.correct / b.total) * 100);
+      return 0;
+    }
+
+    function updateSummary() {
+      document.getElementById('total-siswa').textContent = studentsData.length;
+      
+      let totalXP = 0;
+      let allDone = 0;
+      let totalBadges = 0;
+
+      studentsData.forEach(s => {
+        totalXP += s.xp;
+        totalBadges += s.badges.length;
+        if (s.bab1 === 100 && s.bab2 === 100 && s.bab3 === 100 && s.bab4 === 100) {
+          allDone++;
+        }
+      });
+
+      document.getElementById('avg-xp').textContent = studentsData.length > 0 ? Math.round(totalXP / studentsData.length) : 0;
+      document.getElementById('completed-all').textContent = allDone;
+      document.getElementById('avg-badges').textContent = studentsData.length > 0 ? (totalBadges / studentsData.length).toFixed(1) : 0;
+    }
+
+    function renderTable(data) {
+      tbody.innerHTML = '';
+      data.forEach((s, i) => {
+        const tr = document.createElement('tr');
+        tr.onclick = () => openStudentModal(s);
+        tr.innerHTML = `
+          <td>${i + 1}</td>
+          <td>${s.nama}</td>
+          <td>${s.kelas}</td>
+          <td>${s.xp}</td>
+          <td>${s.level}</td>
+          <td>${renderProgress(s.bab1)}</td>
+          <td>${renderProgress(s.bab2)}</td>
+          <td>${renderProgress(s.bab3)}</td>
+          <td>${renderProgress(s.bab4)}</td>
+          <td>${s.badges.length}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderProgress(percent) {
+      return `
+        <div>${percent}%</div>
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" style="width: ${percent}%; background: ${percent === 100 ? '#00ffcc' : '#0099ff'};"></div>
+        </div>
+      `;
+    }
+
+    function filterTable() {
+      const q = document.getElementById('search-input').value.toLowerCase();
+      const filtered = studentsData.filter(s => 
+        s.nama.toLowerCase().includes(q) || s.kelas.toLowerCase().includes(q)
+      );
+      renderTable(filtered);
+    }
+
+    function sortTable(colIndex) {
+      if (currentSortCol === colIndex) {
+        currentSortAsc = !currentSortAsc;
+      } else {
+        currentSortCol = colIndex;
+        currentSortAsc = true;
+      }
+
+      const keys = ['index', 'nama', 'kelas', 'xp', 'level', 'bab1', 'bab2', 'bab3', 'bab4', 'badgeCount'];
+      const key = keys[colIndex];
+
+      const sorted = [...studentsData].sort((a, b) => {
+        let valA, valB;
+        if (key === 'index') return 0; // Not strictly sorting by index in object, fallback
+        if (key === 'badgeCount') { valA = a.badges.length; valB = b.badges.length; }
+        else { valA = a[key]; valB = b[key]; }
+
+        if (valA < valB) return currentSortAsc ? -1 : 1;
+        if (valA > valB) return currentSortAsc ? 1 : -1;
+        return 0;
+      });
+
+      renderTable(sorted);
+    }
+
+    function exportCSV() {
+      if (studentsData.length === 0) return;
+      let csv = "Nama,Kelas,XP,Level,Bab 1 (%),Bab 2 (%),Bab 3 (%),Bab 4 (%),Total Badge\n";
+      studentsData.forEach(s => {
+        // Escape quotes
+        const nama = '"' + s.nama.replace(/"/g, '""') + '"';
+        const kelas = '"' + s.kelas.replace(/"/g, '""') + '"';
+        csv += `${nama},${kelas},${s.xp},${s.level},${s.bab1},${s.bab2},${s.bab3},${s.bab4},${s.badges.length}\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", "data_siswa_kka.csv");
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Modal
+    const modal = document.getElementById('student-modal');
+    function openStudentModal(student) {
+      document.getElementById('modal-student-name').textContent = student.nama + " (" + student.kelas + ")";
+      const badgeContainer = document.getElementById('modal-badges');
+      badgeContainer.innerHTML = '';
+      
+      if (student.badges.length === 0) {
+        badgeContainer.innerHTML = '<p style="color:var(--text-muted)">Belum ada badge.</p>';
+      } else {
+        student.badges.forEach(b => {
+          const div = document.createElement('div');
+          div.className = 'badge-item';
+          div.textContent = b;
+          badgeContainer.appendChild(div);
+        });
+      }
+      modal.style.display = 'flex';
+    }
+
+    function closeStudentModal() {
+      modal.style.display = 'none';
+    }
+
+    // Close modal when clicking outside
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeStudentModal();
+    });
+  </script>
+</body>
+</html>

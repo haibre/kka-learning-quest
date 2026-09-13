@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KKA Learning Quest — Kelas X</title>
+  <style>
+    :root {
+      --primary: #6C5CE7;
+      --primary-light: #A29BFE;
+      --secondary: #00B894;
+      --secondary-light: #55EFC4;
+      --accent: #FDCB6E;
+      --danger: #E17055;
+      --danger-light: #FAB1A0;
+      --bg: #0F0F1A;
+      --bg-secondary: #1A1A2E;
+      --card-bg: #16213E;
+      --text: #DFE6E9;
+      --text-secondary: #B2BEC3;
+      --radius: 16px;
+      --radius-sm: 8px;
+      --shadow: 0 8px 32px rgba(0,0,0,0.3);
+      --shadow-sm: 0 4px 12px rgba(0,0,0,0.2);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    [data-theme="light"] {
+      --bg: #F0F2F5;
+      --bg-secondary: #FFFFFF;
+      --card-bg: #FFFFFF;
+      --text: #2D3436;
+      --text-secondary: #636E72;
+      --shadow: 0 8px 32px rgba(0,0,0,0.1);
+      --shadow-sm: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      transition: background-color var(--transition), color var(--transition);
+      overflow-x: hidden;
+    }
+
+    #theme-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1001;
+      background: var(--card-bg);
+      border: 1px solid var(--text-secondary);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-sm);
+      color: var(--text);
+    }
+
+    .screen {
+      display: none;
+      min-height: 100vh;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .screen.active {
+      display: block;
+    }
+
+    /* Landing Page */
+    .landing-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: calc(100vh - 40px);
+      text-align: center;
+      position: relative;
+    }
+    .landing-title {
+      font-size: 3rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--primary), var(--accent), var(--secondary));
+      background-size: 200% auto;
+      color: transparent;
+      -webkit-background-clip: text;
+      background-clip: text;
+      animation: gradientShift 3s linear infinite;
+      margin-bottom: 10px;
+      z-index: 2;
+    }
+    .landing-subtitle {
+      font-size: 1.5rem;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+      z-index: 2;
+    }
+    .landing-desc {
+      max-width: 600px;
+      margin-bottom: 40px;
+      line-height: 1.6;
+      z-index: 2;
+    }
+    .landing-particles {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* Auth */
+    .auth-container {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 2rem;
+      max-width: 400px;
+      margin: 10vh auto;
+      box-shadow: var(--shadow);
+    }
+    .auth-container h2 {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .input {
+      width: 100%;
+      padding: 12px 16px;
+      margin-bottom: 15px;
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      border: 1px solid var(--text-secondary);
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+    }
+    .input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-light);
+    }
+    .auth-switch {
+      margin-top: 15px;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+    .auth-switch a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+    
+    /* Buttons */
+    .btn {
+      padding: 12px 24px;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-light); }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover { background: var(--danger-light); }
+    .btn-success { background: var(--secondary); color: white; }
+    .btn-success:hover { background: var(--secondary-light); }
+    .btn-accent { background: var(--accent); color: #000; }
+    .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--text); }
+    .btn-outline:hover { background: var(--primary); color: white; }
+    .btn-back { background: transparent; color: var(--text-secondary); padding: 8px; border-radius: var(--radius-sm); }
+    .btn-back:hover { background: var(--bg-secondary); color: var(--text); }
+    .btn-sm { padding: 8px 16px; font-size: 0.85rem; }
+    .btn-lg { padding: 16px 32px; font-size: 1.2rem; border-radius: var(--radius); }
+    .btn-block { width: 100%; }
+    .btn:active { transform: scale(0.98); }
+
+    /* Dashboard */
+    .dashboard-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .dash-level {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      margin-top: 5px;
+    }
+    .xp-section {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: var(--radius);
+      margin-bottom: 30px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+    }
+    .xp-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    .xp-bar {
+      height: 12px;
+      border-radius: 6px;
+      background: var(--bg-secondary);
+      overflow: hidden;
+    }
+    .xp-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--secondary), var(--primary));
+      border-radius: 6px;
+      transition: width 0.5s ease-out;
+    }
+    .xp-combo {
+      position: absolute;
+      top: -10px;
+      right: 20px;
+      background: var(--accent);
+      color: #000;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: bold;
+      animation: pulse 1.5s infinite;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .bab-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+    .bab-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 20px;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: var(--shadow-sm);
+      text-align: center;
+    }
+    .bab-card:hover {
+      transform: scale(1.03);
+      box-shadow: var(--shadow);
+    }
+    .bab-icon {
+      font-size: 3rem;
+      display: block;
+      margin-bottom: 10px;
+    }
+    .bab-subtitle {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      margin-top: 5px;
+    }
+    .bab-progress {
+      height: 6px;
+      border-radius: 3px;
+      background: var(--bg);
+      margin-top: 15px;
+      overflow: hidden;
+    }
+    .bab-progress-fill {
+      height: 100%;
+      background: var(--secondary);
+      border-radius: 3px;
+      transition: width 0.5s ease-out;
+    }
+
+    /* Game Containers */
+    .game-container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .game-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+    .game-score {
+      margin-left: auto;
+      background: var(--primary);
+      color: white;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-weight: bold;
+    }
+    
+    /* Minigame Grid */
+    .minigame-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+    }
+    .minigame-card {
+      background: var(--card-bg);
+      border-radius: var(--radius-sm);
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      cursor: pointer;
+      transition: var(--transition);
+      border-left: 4px solid transparent;
+    }
+    .minigame-card:hover {
+      background: var(--bg-secondary);
+      transform: translateX(5px);
+    }
+    .mg-icon { font-size: 2rem; }
+    .mg-name { font-weight: 600; flex-grow: 1; }
+    .mg-status { margin-left: auto; font-size: 1.2rem; }
+
+    /* Trophy Room */
+    .trophy-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .badge-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+      transition: var(--transition);
+      border: 2px solid transparent;
+    }
+    .badge-card.locked {
+      opacity: 0.5;
+      filter: grayscale(100%);
+    }
+    .badge-card.unlocked {
+      border-color: var(--accent);
+      animation: glow 2s infinite alternate;
+    }
+    .badge-emoji { font-size: 3rem; margin-bottom: 10px; display: block; }
+    .badge-name { font-weight: bold; margin-bottom: 5px; }
+    .badge-desc { font-size: 0.8rem; color: var(--text-secondary); }
+    .trophy-progress { margin-bottom: 30px; }
+
+    /* Modals & Notifications */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 2rem;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: var(--shadow);
+    }
+    .notification {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translate(-50%, -150%);
+      background: var(--card-bg);
+      padding: 15px 25px;
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow);
+      z-index: 999;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .notification.show {
+      transform: translate(-50%, 0);
+    }
+    .error-msg {
+      color: var(--danger);
+      font-size: 0.9rem;
+      margin-top: 10px;
+      text-align: center;
+    }
+    #confetti-canvas {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* Game specific basics for UI placeholders */
+    .scenario-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 2rem;
+      max-width: 500px;
+      margin: 0 auto;
+      animation: slideIn 0.4s ease-out;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .scenario-card.flip { animation: flipCard 0.6s ease-in-out; }
+    .scenario-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
+    .btn-safe { background: var(--secondary); color: white; }
+    .btn-danger-choice { background: var(--danger); color: white; }
+    
+    .stack-visual, .queue-visual {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin: 30px 0;
+      min-height: 150px;
+    }
+    .stack-visual { flex-direction: column-reverse; }
+    .plate, .queue-item {
+      background: var(--primary);
+      color: white;
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      font-weight: bold;
+      transition: transform 0.3s;
+    }
+    
+    .search-boxes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    .search-box {
+      width: 60px;
+      height: 60px;
+      background: var(--card-bg);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+    .search-box.opened { background: var(--primary); color: white; }
+    .search-box.found { background: var(--secondary); color: white; }
+    .search-box.eliminated { opacity: 0.3; pointer-events: none; }
+    
+    .sort-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      height: 200px;
+      margin: 30px 0;
+      justify-content: center;
+    }
+    .sort-bar {
+      width: 30px;
+      background: var(--primary);
+      border-radius: 4px 4px 0 0;
+      transition: all 0.3s;
+    }
+    .sort-bar.comparing { background: var(--accent); }
+    .sort-bar.sorted { background: var(--secondary); }
+    .sort-bar.selected { background: var(--danger); }
+    
+    .grid-4x4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      max-width: 320px;
+      margin: 20px auto;
+    }
+    .grid-cell {
+      width: 70px;
+      height: 70px;
+      background: var(--card-bg);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+    .grid-cell.wall { background: #333; }
+    .grid-cell.bot { background: var(--primary); }
+    .grid-cell.finish { background: var(--secondary); }
+    
+    .instruction-panel {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .instruction-queue {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      padding: 10px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-sm);
+      min-height: 50px;
+      margin-top: 15px;
+    }
+    .instruction-tag {
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: var(--primary);
+      color: white;
+      font-size: 0.8rem;
+    }
+    
+    .code-editor {
+      background: #1E1E1E;
+      border-radius: var(--radius-sm);
+      padding: 20px;
+      font-family: 'Courier New', Courier, monospace;
+      overflow-x: auto;
+      color: #D4D4D4;
+      text-align: left;
+    }
+    .code-line {
+      padding: 4px 0;
+      white-space: pre-wrap;
+    }
+    .code-blank {
+      background: transparent;
+      border: none;
+      border-bottom: 2px dashed var(--accent);
+      color: var(--accent);
+      font-family: 'Courier New', Courier, monospace;
+      font-size: inherit;
+      min-width: 80px;
+      text-align: center;
+      outline: none;
+      padding: 0 4px;
+    }
+    .terminal-output {
+      background: #0D0D0D;
+      color: #00FF00;
+      font-family: 'Courier New', Courier, monospace;
+      padding: 15px;
+      border-radius: var(--radius-sm);
+      margin-top: 15px;
+      min-height: 60px;
+      text-align: left;
+    }
+    .hint-btn {
+      position: relative;
+      font-size: 0.8rem;
+      opacity: 0.7;
+    }
+
+    @keyframes slideIn { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes slideOut { from { opacity:1; transform:translateY(0); } to { opacity:0; transform:translateY(-30px); } }
+    @keyframes scaleIn { from { opacity:0; transform:scale(0.8); } to { opacity:1; transform:scale(1); } }
+    @keyframes flipCard { 0% { transform:rotateY(0); } 50% { transform:rotateY(90deg); } 100% { transform:rotateY(0); } }
+    @keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.1); } }
+    @keyframes glow { 0%,100% { box-shadow:0 0 5px var(--accent); } 50% { box-shadow:0 0 20px var(--accent); } }
+    @keyframes gradientShift { 0% { background-position:0% 50%; } 50% { background-position:100% 50%; } 100% { background-position:0% 50%; } }
+    @keyframes float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-10px); } }
+
+    @media (max-width: 768px) {
+      .bab-grid { grid-template-columns: 1fr; }
+      .minigame-grid { grid-template-columns: 1fr; }
+      .trophy-grid { grid-template-columns: repeat(2, 1fr); }
+      .landing-title { font-size: 2rem; }
+      .sort-bars { height: 150px; }
+      .grid-cell { width: 55px; height: 55px; }
+    }
+    @media (max-width: 480px) {
+      .trophy-grid { grid-template-columns: repeat(2, 1fr); }
+      .grid-cell { width: 45px; height: 45px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Theme toggle button (fixed position) -->
+  <button id="theme-toggle" onclick="KKA.ui.toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
+
+  <!-- XP notification toast -->
+  <div id="notification" class="notification"></div>
+
+  <!-- Badge unlock modal -->
+  <div id="badge-modal" class="modal-overlay" style="display:none">
+    <div class="modal">
+      <div id="badge-modal-content"></div>
+      <button class="btn btn-primary" onclick="KKA.ui.closeModal()">Lanjutkan! 🚀</button>
+    </div>
+  </div>
+
+  <!-- Confetti canvas -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- ========== SCREENS ========== -->
+
+  <!-- Landing Page -->
+  <div id="screen-landing" class="screen active">
+    <div class="landing-container">
+      <div class="landing-particles" id="particles"></div>
+      <h1 class="landing-title">🚀 KKA Learning Quest</h1>
+      <p class="landing-subtitle">Koding & Kecerdasan Artifisial — Kelas X</p>
+      <p class="landing-desc">Petualangan interaktif belajar literasi digital, struktur data, algoritma, berpikir komputasional, dan dasar pemrograman Python!</p>
+      <button class="btn btn-primary btn-lg" onclick="KKA.ui.showScreen('screen-auth')">Mulai Petualangan ⚡</button>
+    </div>
+  </div>
+
+  <!-- Auth Screen -->
+  <div id="screen-auth" class="screen">
+    <div class="auth-container">
+      <h2 id="auth-title">Masuk</h2>
+      <div id="auth-form">
+        <div id="auth-register-fields" style="display:none">
+          <input type="text" id="auth-nama" placeholder="Nama Lengkap" class="input" />
+          <input type="text" id="auth-kelas" placeholder="Kelas (contoh: X-1)" class="input" />
+        </div>
+        <input type="email" id="auth-email" placeholder="Email" class="input" />
+        <input type="password" id="auth-password" placeholder="Password" class="input" />
+        <button id="auth-submit-btn" class="btn btn-primary btn-block" onclick="KKA.auth.handleSubmit()">Masuk</button>
+        <p class="auth-switch">Belum punya akun? <a href="#" id="auth-switch-link" onclick="KKA.auth.toggleMode()">Daftar di sini</a></p>
+        <div id="auth-error" class="error-msg" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="screen-dashboard" class="screen">
+    <div class="dashboard-container">
+      <div class="dashboard-header">
+        <div>
+          <h2>Halo, <span id="dash-nama">Siswa</span>! 👋</h2>
+          <p class="dash-level">Level: <span id="dash-level">Pemula</span> | <span id="dash-kelas"></span></p>
+        </div>
+        <button class="btn btn-sm btn-outline" onclick="KKA.auth.logout()">Keluar 🚪</button>
+      </div>
+
+      <!-- XP Bar -->
+      <div class="xp-section">
+        <div class="xp-info">
+          <span>⭐ <span id="dash-xp">0</span> XP</span>
+          <span id="dash-next-level">100 XP ke level berikutnya</span>
+        </div>
+        <div class="xp-bar">
+          <div id="dash-xp-fill" class="xp-fill" style="width:0%"></div>
+        </div>
+        <div class="xp-combo" id="dash-combo" style="display:none">🔥 Combo x<span id="dash-combo-count">0</span></div>
+      </div>
+
+      <!-- Bab Cards -->
+      <div class="bab-grid">
+        <div class="bab-card" onclick="KKA.ui.showScreen('screen-bab1')">
+          <div class="bab-icon">🛡️</div>
+          <h3>Bab 1</h3>
+          <p>Literasi Digital</p>
+          <p class="bab-subtitle">Swipe Safety</p>
+          <div class="bab-progress"><div id="progress-bab1" class="bab-progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="bab-card" onclick="KKA.ui.showScreen('screen-bab2-hub')">
+          <div class="bab-icon">🎮</div>
+          <h3>Bab 2</h3>
+          <p>Struktur Data & Algoritma</p>
+          <p class="bab-subtitle">Arcade 8 Minigame</p>
+          <div class="bab-progress"><div id="progress-bab2" class="bab-progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="bab-card" onclick="KKA.ui.showScreen('screen-bab3')">
+          <div class="bab-icon">🤖</div>
+          <h3>Bab 3</h3>
+          <p>Berpikir Komputasional</p>
+          <p class="bab-subtitle">Bot Navigator</p>
+          <div class="bab-progress"><div id="progress-bab3" class="bab-progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="bab-card" onclick="KKA.ui.showScreen('screen-bab4')">
+          <div class="bab-icon">🐍</div>
+          <h3>Bab 4</h3>
+          <p>Dasar Pemrograman</p>
+          <p class="bab-subtitle">Fill Python Code</p>
+          <div class="bab-progress"><div id="progress-bab4" class="bab-progress-fill" style="width:0%"></div></div>
+        </div>
+      </div>
+
+      <!-- Trophy Room Button -->
+      <button class="btn btn-accent btn-block" onclick="KKA.ui.showScreen('screen-trophy')" style="margin-top:1rem">
+        🏆 Trophy Room — <span id="dash-badge-count">0</span>/12 Badge
+      </button>
+    </div>
+  </div>
+
+  <!-- BAB 1: Literasi Digital -->
+  <div id="screen-bab1" class="screen">
+    <div class="game-container">
+      <div class="game-header">
+        <button class="btn btn-sm btn-back" onclick="KKA.ui.showScreen('screen-dashboard')">← Kembali</button>
+        <h2>🛡️ Bab 1: Swipe Safety</h2>
+        <span class="game-score" id="bab1-score">0/10</span>
+      </div>
+      <div id="bab1-content">
+        <!-- Bab1 JS will populate this -->
+      </div>
+    </div>
+  </div>
+
+  <!-- BAB 2: Hub -->
+  <div id="screen-bab2-hub" class="screen">
+    <div class="game-container">
+      <div class="game-header">
+        <button class="btn btn-sm btn-back" onclick="KKA.ui.showScreen('screen-dashboard')">← Kembali</button>
+        <h2>🎮 Bab 2: Arcade Minigame</h2>
+      </div>
+      <div class="minigame-grid">
+        <div class="minigame-card" onclick="KKA.ui.showScreen('screen-bab2-stack')" id="mg-stack">
+          <span class="mg-icon">📚</span><span class="mg-name">Stack</span><span class="mg-status" id="mg-stack-status">⬜</span>
+        </div>
+        <div class="minigame-card" onclick="KKA.ui.showScreen('screen-bab2-queue')" id="mg-queue">
+          <span class="mg-icon">🎟️</span><span class="mg-name">Queue</span><span class="mg-status" id="mg-queue-status">⬜</span>
+        </div>
+        <div class="minigame-card" onclick="KKA.ui.showScreen('screen-bab2-array')" id="mg-array">
+          <span class="mg-icon">📊</span><span class="mg-name">Array</span><span class="mg-status" id="mg-array-status">⬜</span>
+        </div>
+        <div class="minigame-card" onclick="KKA.ui.showScreen('screen-bab2-linear')" id="mg-linear">
+          <span class="mg-icon">🔍</span><span class="mg-name">Linear Search</span><span class="mg-status" id="mg-linear-status">⬜</span>
+        </div>
+        <div class="minigame-card" onclick="KKA.ui.showScreen('screen-bab2-binary')" id="mg-binary">
+          <span class="mg-icon">⚡</span><span class="mg-name">Binary Search</span><span class="mg-status" id="mg-binary-status">⬜</span>
+        </div>
+        <div class="minigame-card" onclick="KKA.ui.showScreen('screen-bab2-bubble')" id="mg-bubble">
+          <span class="mg-icon">🫧</span><span class="mg-name">Bubble Sort</span><span class="mg-status" id="mg-bubble-status">⬜</span>
+        </div>
+        <div class="minigame-card" onclick="KKA.ui.showScreen('screen-bab2-selection')" id="mg-selection">
+          <span class="mg-icon">🎯</span><span class="mg-name">Selection Sort</span><span class="mg-status" id="mg-selection-status">⬜</span>
+        </div>
+        <div class="minigame-card" onclick="KKA.ui.showScreen('screen-bab2-insertion')" id="mg-insertion">
+          <span class="mg-icon">🃏</span><span class="mg-name">Insertion Sort</span><span class="mg-status" id="mg-insertion-status">⬜</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BAB 2: Stack -->
+  <div id="screen-bab2-stack" class="screen">
+    <div class="game-container">
+      <div class="game-header">
+        <button class="btn btn-sm btn-back" onclick="KKA.ui.showScreen('screen-bab2-hub')">← Kembali</button>
+        <h2>📚 Stack — Push & Pop</h2>
+      </div>
+      <div id="stack-content"></div>
+    </div>
+  </div>
+
+  <!-- BAB 2: Queue -->
+  <div id="screen-bab2-queue" class="screen">
+    <div class="game-container">
+      <div class="game-header">
+        <button class="btn btn-sm btn-back" onclick="KKA.ui.showScreen('screen-bab2-hub')">← Kembali</button>
+        <h2>🎟️ Queue — Enqueue & Dequeue</h2>
+      </div>
+      <div id="queue-content"></div>
+    </div>
+  </div>
+
+  <!-- BAB 2: Array -->
+  <div id="screen-bab2-array" class="screen">
+    <div class="game-container">
+      <div class="game-header">
+        <button class="btn btn-sm btn-back" onclick="KKA.ui.showScreen('screen-bab2-hub')">← Kembali</button>
+        <h2>📊 Array — Index Quiz</h2>
+      </div>
+      <div id="array-content"></div>
+    </div>
+  </div>
+
+  <!-- BAB 2: Linear Search -->
+  <div id="screen-bab2-linear" class="screen">
+    <div class="game-container">
+      <div class="game-header">
+        <button class="btn btn-sm btn-back" onclick="KKA.ui.showScreen('screen-bab2-hub')">← Kembali</button>
+        <h2>🔍 Linear Search</h2>
+      </div>
+      <div id="linear-content"></div>
+    </div>
+  </div>
+
+  <!-- BAB 2: Binary Search -->
+  <div id="screen-bab2-binary" class="screen">
+    <div class="game-container">
+      <div class="game-header">
+        <button class="btn btn-sm btn-back" onclick="KKA.ui.showScreen('screen-bab2-hub')">← Kembali</button>
+        <h2>⚡ Binary Search</h2>
+      </div>
+      <div id="binary-content"></div>
+    </div>
+  </div>
+
+  <!-- BAB 2: Bubble Sort -->
+  <div id="screen-bab2-bubble" class="screen">
+    <div class="game-container">
+      <div class="game-header">
+        <button class="btn btn-sm btn-back" onclick="KKA.ui.showScreen('screen-bab2-hub')">← Kembali</button>
+        <h2>🫧 Bubble Sort</h2>
+      </div>
+      <div id="bubble-content"></div>
+    </div>
+  </div>
+
+  <!-- BAB 2: Selection Sort -->
+  <div id="screen-bab2-selection" class="screen">
+    <div class="game-container">
+      <div class="game-header">
+        <button class="btn btn-sm btn-back" onclick="KKA.ui.showScreen('screen-bab2-hub')">← Kembali</button>
+        <h2>🎯 Selection Sort</h2>
+      </div>
+      <div id="selection-content"></div>
+    </div>
+  </div>
+
+  <!-- BAB 2: Insertion Sort -->
+  <div id="screen-bab2-insertion" class="screen">
+    <div class="game-container">
+      <div class="game-header">
+        <button class="btn btn-sm btn-back" onclick="KKA.ui.showScreen('screen-bab2-hub')">← Kembali</button>
+        <h2>🃏 Insertion Sort</h2>
+      </div>
+      <div id="insertion-content"></div>
+    </div>
+  </div>
+
+  <!-- BAB 3: Bot Navigator -->
+  <div id="screen-bab3" class="screen">
+    <div class="game-container">
+      <div class="game-header">
+        <button class="btn btn-sm btn-back" onclick="KKA.ui.showScreen('screen-dashboard')">← Kembali</button>
+        <h2>🤖 Bab 3: Bot Navigator</h2>
+        <span class="game-score" id="bab3-level">Level 1/3</span>
+      </div>
+      <div id="bab3-content"></div>
+    </div>
+  </div>
+
+  <!-- BAB 4: Python Puzzles -->
+  <div id="screen-bab4" class="screen">
+    <div class="game-container">
+      <div class="game-header">
+        <button class="btn btn-sm btn-back" onclick="KKA.ui.showScreen('screen-dashboard')">← Kembali</button>
+        <h2>🐍 Bab 4: Fill Python Code</h2>
+        <span class="game-score" id="bab4-score">0/6</span>
+      </div>
+      <div id="bab4-content"></div>
+    </div>
+  </div>
+
+  <!-- Trophy Room -->
+  <div id="screen-trophy" class="screen">
+    <div class="game-container">
+      <div class="game-header">
+        <button class="btn btn-sm btn-back" onclick="KKA.ui.showScreen('screen-dashboard')">← Kembali</button>
+        <h2>🏆 Trophy Room</h2>
+        <span class="game-score" id="trophy-count">0/12</span>
+      </div>
+      <div class="trophy-progress">
+        <div class="xp-bar"><div id="trophy-progress-fill" class="xp-fill" style="width:0%"></div></div>
+      </div>
+      <div id="trophy-grid" class="trophy-grid">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/bab1.js"></script>
+  <script src="js/bab2.js"></script>
+  <script src="js/bab3.js"></script>
+  <script src="js/bab4.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

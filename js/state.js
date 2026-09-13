@@ -1,0 +1,188 @@
+window.KKA = window.KKA || {};
+
+KKA.state = {
+  data: {
+    xp: 0,
+    level: 1,
+    combo: 0,
+    maxCombo: 0,
+    badges: [],
+    bab1: { completed: false, correct: 0, total: 10, scenarios: [] },
+    bab2: { stack: false, queue: false, array: false, linear: false, binary: false, bubble: false, selection: false, insertion: false },
+    bab3: { completed: false, levelsCompleted: [] },
+    bab4: { completed: false, correct: 0, total: 6, puzzles: [] }
+  },
+  
+  async init() {
+    this.loadLocal();
+    if (KKA.auth && KKA.auth.isLoggedIn()) {
+      await this.loadFromSupabase();
+    }
+  },
+  
+  addXP(amount) {
+    const oldLevel = this.getLevel().name;
+    this.data.xp += amount;
+    
+    const newLevelConfig = this.getLevel();
+    if (newLevelConfig.name !== oldLevel) {
+      // Level Up!
+      this.data.level = KKA.config.LEVELS.indexOf(newLevelConfig) + 1;
+      if (KKA.ui) KKA.ui.showNotification(`Level Up! Kamu sekarang ${newLevelConfig.name} ${newLevelConfig.emoji}`, 'success');
+      if (KKA.audio) KKA.audio.playLevelUp();
+    } else {
+      if (KKA.ui) KKA.ui.showNotification(`+${amount} XP`, 'xp');
+    }
+    this.save();
+    if (KKA.ui) KKA.ui.updateDashboard();
+  },
+  
+  incrementCombo() {
+    this.data.combo++;
+    if (this.data.combo > this.data.maxCombo) {
+      this.data.maxCombo = this.data.combo;
+    }
+    if (this.data.combo >= 3) {
+      this.addXP(KKA.config.XP.COMBO_BONUS);
+      if (KKA.audio) KKA.audio.playCombo();
+    }
+    if (KKA.ui) KKA.ui.updateDashboard();
+  },
+  
+  resetCombo() {
+    this.data.combo = 0;
+    if (KKA.ui) KKA.ui.updateDashboard();
+  },
+  
+  unlockBadge(badgeId) {
+    if (!this.data.badges.includes(badgeId)) {
+      this.data.badges.push(badgeId);
+      
+      const badgeConf = KKA.config.BADGES.find(b => b.id === badgeId);
+      if (KKA.ui && badgeConf) KKA.ui.showBadgeUnlock(badgeConf);
+      
+      // Check legend badge
+      const nonLegendBadges = KKA.config.BADGES.filter(b => b.id !== 'kka-legend');
+      const hasAll = nonLegendBadges.every(b => this.data.badges.includes(b.id));
+      if (hasAll && !this.data.badges.includes('kka-legend')) {
+        setTimeout(() => this.unlockBadge('kka-legend'), 4000); // Unlock after a delay
+      }
+      this.save();
+    }
+  },
+  
+  completeActivity(bab, activity) {
+    if (bab === 'bab2') {
+      this.data.bab2[activity] = true;
+    } else if (bab === 'bab3') {
+      if (!this.data.bab3.levelsCompleted.includes(activity)) {
+        this.data.bab3.levelsCompleted.push(activity);
+      }
+    }
+    this.save();
+  },
+  
+  getLevel() {
+    let current = KKA.config.LEVELS[0];
+    for (let i = KKA.config.LEVELS.length - 1; i >= 0; i--) {
+      if (this.data.xp >= KKA.config.LEVELS[i].minXP) {
+        current = KKA.config.LEVELS[i];
+        break;
+      }
+    }
+    return current;
+  },
+  
+  getLevelProgress() {
+    const levelConfig = this.getLevel();
+    const idx = KKA.config.LEVELS.indexOf(levelConfig);
+    const nextLevel = KKA.config.LEVELS[idx + 1];
+    
+    if (!nextLevel) return { current: this.data.xp, next: 'MAX', percentage: 100 };
+    
+    const range = nextLevel.minXP - levelConfig.minXP;
+    const progress = this.data.xp - levelConfig.minXP;
+    const percentage = Math.min(100, Math.max(0, (progress / range) * 100));
+    
+    return {
+      current: this.data.xp,
+      next: nextLevel.minXP - this.data.xp,
+      percentage
+    };
+  },
+  
+  saveLocal() {
+    localStorage.setItem('kka-progress', JSON.stringify(this.data));
+  },
+  
+  loadLocal() {
+    const saved = localStorage.getItem('kka-progress');
+    if (saved) {
+      try {
+        this.data = JSON.parse(saved);
+      } catch (e) {
+        console.error("Error loading local state", e);
+      }
+    }
+  },
+  
+  async saveToSupabase() {
+    if (KKA.auth && KKA.auth.isLoggedIn() && KKA.auth.supabase) {
+      const user = KKA.auth.getUser();
+      try {
+        await KKA.auth.supabase
+          .from('progress')
+          .upsert({ user_id: user.id, data: this.data }, { onConflict: 'user_id' });
+      } catch (e) {
+        console.error("Error saving to supabase", e);
+      }
+    }
+  },
+  
+  async loadFromSupabase() {
+    if (KKA.auth && KKA.auth.isLoggedIn() && KKA.auth.supabase) {
+      const user = KKA.auth.getUser();
+      try {
+        const { data, error } = await KKA.auth.supabase
+          .from('progress')
+          .select('data')
+          .eq('user_id', user.id)
+          .single();
+        if (data && data.data) {
+          this.data = data.data;
+          this.saveLocal();
+        }
+      } catch (e) {
+        console.error("Error loading from supabase", e);
+      }
+    }
+  },
+  
+  save() {
+    this.saveLocal();
+    this.saveToSupabase();
+  },
+  
+  load() {
+    this.loadLocal();
+    this.loadFromSupabase();
+  },
+  
+  getBab1Progress() {
+    return (this.data.bab1.correct / this.data.bab1.total) * 100;
+  },
+  
+  getBab2Progress() {
+    const keys = Object.keys(this.data.bab2);
+    const completed = keys.filter(k => this.data.bab2[k] === true).length;
+    return (completed / 8) * 100;
+  },
+  
+  getBab3Progress() {
+    return (this.data.bab3.levelsCompleted.length / 3) * 100;
+  },
+  
+  getBab4Progress() {
+    return (this.data.bab4.correct / this.data.bab4.total) * 100;
+  }
+};
