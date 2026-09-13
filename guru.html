@@ -323,6 +323,7 @@
     </div>
   </div>
 
+  <script src="js/config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     let supabaseClient = null;
@@ -338,10 +339,8 @@
 
     // Attempt to load saved credentials
     window.onload = () => {
-      const savedUrl = localStorage.getItem('guru_sb_url');
-      const savedKey = localStorage.getItem('guru_sb_key');
-      if (savedUrl) document.getElementById('guru-sb-url').value = savedUrl;
-      if (savedKey) document.getElementById('guru-sb-key').value = savedKey;
+      document.getElementById('guru-sb-url').value = KKA.config.SUPABASE_URL;
+      document.getElementById('guru-sb-key').value = KKA.config.SUPABASE_ANON_KEY;
     };
 
     function showError(msg) {
@@ -375,9 +374,14 @@
           .from('profiles')
           .select('role')
           .eq('id', data.user.id)
-          .single();
+          .maybeSingle();
 
         if (profileError) throw profileError;
+
+        if (!profile) {
+          await supabaseClient.auth.signOut();
+          throw new Error("Profil guru belum dibuat. Tambahkan akun ini ke tabel profiles dan set role = 'guru'.");
+        }
 
         if (profile.role !== 'guru') {
           await supabaseClient.auth.signOut();
@@ -410,20 +414,12 @@
     async function refreshData() {
       if (!supabaseClient) return;
       try {
-        // Query profiles and join with progress
-        // According to RLS, teachers can view all
-        const { data, error } = await supabaseClient
-          .from('profiles')
-          .select(`
-            id, nama, kelas, role, updated_at,
-            progress ( data )
-          `)
-          .eq('role', 'siswa');
+        const { data, error } = await supabaseClient.rpc('get_teacher_students');
 
         if (error) throw error;
 
         studentsData = data.map(row => {
-          const pData = (row.progress && row.progress.length > 0) ? row.progress[0].data : {};
+          const pData = row.progress_data || {};
           return {
             nama: row.nama,
             kelas: row.kelas || '-',

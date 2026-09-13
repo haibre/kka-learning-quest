@@ -12,7 +12,34 @@ KKA.auth = {
         this.supabase = window.supabase.createClient(KKA.config.SUPABASE_URL, KKA.config.SUPABASE_ANON_KEY);
         try {
           const { data: { session } } = await this.supabase.auth.getSession();
-          if (session) this.user = session.user;
+          this.user = session ? session.user : null;
+
+          if (this.user) {
+            try {
+              await this.ensureStudentProfile();
+            } catch (error) {
+              console.error('Student session rejected:', error);
+              this.user = null;
+              await this.supabase.auth.signOut();
+            }
+          }
+
+          this.supabase.auth.onAuthStateChange((event, nextSession) => {
+            this.user = nextSession ? nextSession.user : null;
+            if (event === 'SIGNED_IN' && this.user) {
+              this.ensureStudentProfile()
+                .then(() => KKA.ui.showScreen('screen-dashboard'))
+                .catch(async error => {
+                  this.showError(error.message);
+                  await this.supabase.auth.signOut();
+                });
+            }
+            if (event === 'SIGNED_OUT') {
+              this.offlineUser = null;
+              localStorage.removeItem('kka-user');
+              KKA.ui.showScreen('screen-landing');
+            }
+          });
         } catch(e) {
           console.error("Supabase init error:", e);
         }
@@ -21,7 +48,7 @@ KKA.auth = {
     
     // Check offline user
     const savedOffline = localStorage.getItem('kka-user');
-    if (savedOffline) {
+    if (savedOffline && !this.supabase) {
       try {
         this.offlineUser = JSON.parse(savedOffline);
       } catch(e){}
@@ -93,26 +120,47 @@ KKA.auth = {
     const { data, error } = await this.supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
     this.user = data.user;
-    // get profile
-    const { data: profile } = await this.supabase.from('profiles').select('*').eq('id', this.user.id).single();
-    if (profile) {
-      this.offlineUser = { nama: profile.nama, kelas: profile.kelas };
-      localStorage.setItem('kka-user', JSON.stringify(this.offlineUser));
-    }
+    await this.ensureStudentProfile();
     await KKA.state.loadFromSupabase();
     KKA.ui.showScreen('screen-dashboard');
   },
+
+  async ensureStudentProfile() {
+    const { data: profile, error } = await this.supabase
+      .from('profiles')
+      .select('nama, kelas, role')
+      .eq('id', this.user.id)
+      .maybeSingle();
+
+    if (error) throw new Error(`Profile siswa tidak dapat dibaca: ${error.message}`);
+    if (!profile) throw new Error('Akun belum memiliki profile siswa. Jalankan trigger atau query repair Supabase.');
+    if (profile.role !== 'siswa') throw new Error('Akun ini bukan akun siswa. Gunakan halaman login yang sesuai.');
+
+    this.offlineUser = { nama: profile.nama, kelas: profile.kelas };
+    localStorage.setItem('kka-user', JSON.stringify(this.offlineUser));
+    return profile;
+  },
   
   async register(nama, kelas, email, password) {
-    const { data, error } = await this.supabase.auth.signUp({ email, password });
+    const { data, error } = await this.supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { nama, kelas }
+      }
+    });
     if (error) throw error;
     this.user = data.user;
-    
-    // Create profile
-    if (this.user) {
-      await this.supabase.from('profiles').insert([
-        { id: this.user.id, nama, kelas, role: 'siswa' }
-      ]);
+
+    if (!this.user) {
+      throw new Error('Pendaftaran gagal. Akun belum dibuat oleh Supabase.');
+    }
+
+    if (!data.session) {
+      this.offlineUser = { nama, kelas };
+      localStorage.setItem('kka-user', JSON.stringify(this.offlineUser));
+      this.showError('Akun berhasil dibuat. Silakan cek email untuk konfirmasi sebelum masuk.');
+      return;
     }
     
     this.offlineUser = { nama, kelas };
