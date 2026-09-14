@@ -7,11 +7,12 @@ KKA.state = {
     combo: 0,
     maxCombo: 0,
     badges: [],
-    bab1: { completed: false, correct: 0, total: 10, scenarios: [] },
-    bab2: { stack: false, queue: false, array: false, linear: false, binary: false, bubble: false, selection: false, insertion: false },
+    bab1: { completed: false, correct: 0, total: 15, scenarios: [] },
+    bab2: { stack: false, queue: false, array: false, linear: false, binary: false, bubble: false, selection: false, insertion: false, bughunter: false, circuit: false, prompt: false },
     bab3: { completed: false, levelsCompleted: [] },
     bab4: { completed: false, correct: 0, total: 6, puzzles: [] }
   },
+  saveQueue: Promise.resolve(),
   
   async init() {
     this.loadLocal();
@@ -150,19 +151,23 @@ KKA.state = {
       binary: bab2.binary === true,
       bubble: bab2.bubble === true,
       selection: bab2.selection === true,
-      insertion: bab2.insertion === true
+      insertion: bab2.insertion === true,
+      bughunter: bab2.bughunter === true,
+      circuit: bab2.circuit === true,
+      prompt: bab2.prompt === true
     };
   },
   
   async saveToSupabase() {
     if (KKA.auth && KKA.auth.isLoggedIn() && KKA.auth.supabase) {
-      const user = KKA.auth.getUser();
       try {
-        await KKA.auth.supabase
-          .from('progress')
-          .upsert({ user_id: user.id, data: this.data }, { onConflict: 'user_id' });
+        const { error } = await KKA.auth.supabase.rpc('save_student_progress', {
+          progress_data: this.data
+        });
+        if (error) throw error;
       } catch (e) {
-        console.error("Error saving to supabase", e);
+        console.error('Error saving progress to Supabase:', e);
+        if (KKA.ui) KKA.ui.showNotification('Progress belum tersimpan ke server', 'error');
       }
     }
   },
@@ -189,7 +194,10 @@ KKA.state = {
   
   save() {
     this.saveLocal();
-    this.saveToSupabase();
+    this.saveQueue = this.saveQueue
+      .catch(() => {})
+      .then(() => this.saveToSupabase());
+    return this.saveQueue;
   },
   
   load() {
@@ -202,9 +210,9 @@ KKA.state = {
   },
   
   getBab2Progress() {
-    const keys = ['stack', 'queue', 'array', 'linear', 'binary', 'bubble', 'selection', 'insertion'];
+    const keys = ['stack', 'queue', 'array', 'linear', 'binary', 'bubble', 'selection', 'insertion', 'bughunter', 'circuit', 'prompt'];
     const completed = keys.filter(k => this.data.bab2[k] === true).length;
-    return (completed / 8) * 100;
+    return (completed / 11) * 100;
   },
   
   getBab3Progress() {

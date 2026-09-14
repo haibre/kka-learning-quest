@@ -29,12 +29,13 @@
       color: var(--text-color);
       font-family: var(--font-family);
       line-height: 1.6;
+      min-width: 320px;
     }
 
     .guru-container {
-      max-width: 1200px;
+      width: min(100%, 1680px);
       margin: 0 auto;
-      padding: 2rem;
+      padding: clamp(1rem, 3vw, 3rem);
     }
 
     h1 {
@@ -174,6 +175,16 @@
     tr {
       cursor: pointer;
     }
+    .reset-progress-btn {
+      background: var(--danger-color);
+      color: white;
+      padding: 0.45rem 0.7rem;
+      font-size: 0.8rem;
+      white-space: nowrap;
+    }
+    .reset-progress-btn:hover {
+      background: #c93636;
+    }
 
     .progress-bar-container {
       width: 100%;
@@ -225,10 +236,13 @@
     }
 
     @media (max-width: 768px) {
+      .guru-container { padding: 1rem; }
       .guru-header {
         flex-direction: column;
         align-items: flex-start;
       }
+      .guru-header button { margin-left: 0; }
+      th, td { padding: 0.7rem; }
     }
   </style>
 </head>
@@ -304,6 +318,7 @@
               <th onclick="sortTable(7)">Bab 3 ↕</th>
               <th onclick="sortTable(8)">Bab 4 ↕</th>
               <th onclick="sortTable(9)">Badge ↕</th>
+              <th>Aksi</th>
             </tr>
           </thead>
           <tbody id="student-tbody">
@@ -360,7 +375,14 @@
       }
 
       try {
-        supabaseClient = supabase.createClient(url, key);
+        supabaseClient = supabase.createClient(url, key, {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: false,
+            storageKey: 'kka-guru-auth'
+          }
+        });
         
         const { data, error } = await supabaseClient.auth.signInWithPassword({
           email: email,
@@ -394,7 +416,7 @@
 
         loginDiv.style.display = 'none';
         dashboardDiv.style.display = 'block';
-        refreshData();
+        await refreshData();
 
       } catch (err) {
         showError(err.message || "Gagal login. Periksa kembali kredensial.");
@@ -414,6 +436,20 @@
     async function refreshData() {
       if (!supabaseClient) return;
       try {
+        let { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+        if (sessionError) throw sessionError;
+
+        if (!sessionData.session) {
+          throw new Error('Sesi guru sudah berakhir. Silakan login kembali.');
+        }
+
+        const expiresAt = sessionData.session.expires_at || 0;
+        if (expiresAt && expiresAt * 1000 < Date.now() + 60000) {
+          const refreshed = await supabaseClient.auth.refreshSession();
+          if (refreshed.error) throw refreshed.error;
+          sessionData = refreshed.data;
+        }
+
         const { data, error } = await supabaseClient.rpc('get_teacher_students');
 
         if (error) throw error;
@@ -421,6 +457,7 @@
         studentsData = data.map(row => {
           const pData = row.progress_data || {};
           return {
+            id: row.id,
             nama: row.nama,
             kelas: row.kelas || '-',
             xp: pData.xp || 0,
@@ -438,6 +475,9 @@
 
       } catch (err) {
         alert("Gagal mengambil data: " + err.message);
+        if (err.message && (err.message.includes('JWT') || err.message.includes('Sesi guru'))) {
+          await guruLogout();
+        }
       }
     }
 
@@ -451,10 +491,10 @@
 
     function calculateBab2(b) {
       if (!b) return 0;
-      const keys = ['stack', 'queue', 'array', 'linear', 'binary', 'bubble', 'selection', 'insertion'];
+      const keys = ['stack', 'queue', 'array', 'linear', 'binary', 'bubble', 'selection', 'insertion', 'bughunter', 'circuit', 'prompt'];
       let done = 0;
       keys.forEach(k => { if (b[k]) done++; });
-      return Math.round((done / 8) * 100);
+      return Math.round((done / 11) * 100);
     }
 
     function calculateBab3(b) {
@@ -507,6 +547,7 @@
           <td>${renderProgress(s.bab3)}</td>
           <td>${renderProgress(s.bab4)}</td>
           <td>${s.badges.length}</td>
+          <td><button class="reset-progress-btn" onclick="resetStudentProgress(event, '${s.id}')">Reset</button></td>
         `;
         tbody.appendChild(tr);
       });
@@ -519,6 +560,24 @@
           <div class="progress-bar-fill" style="width: ${percent}%; background: ${percent === 100 ? '#00ffcc' : '#0099ff'};"></div>
         </div>
       `;
+    }
+
+    async function resetStudentProgress(event, studentId) {
+      event.stopPropagation();
+      const student = studentsData.find(item => item.id === studentId);
+      const studentName = student ? student.nama : 'siswa ini';
+      if (!confirm(`Reset seluruh progres ${studentName}? XP, badge, dan progres game akan dihapus.`)) return;
+
+      try {
+        const { error } = await supabaseClient.rpc('reset_student_progress', {
+          student_id: studentId
+        });
+        if (error) throw error;
+        alert(`Progres ${studentName} berhasil di-reset.`);
+        await refreshData();
+      } catch (err) {
+        alert('Gagal mereset progres: ' + err.message);
+      }
     }
 
     function filterTable() {
@@ -537,7 +596,7 @@
         currentSortAsc = true;
       }
 
-      const keys = ['index', 'nama', 'kelas', 'xp', 'level', 'bab1', 'bab2', 'bab3', 'bab4', 'badgeCount'];
+      const keys = ['index', 'nama', 'kelas', 'xp', 'level', 'bab1', 'bab2', 'bab3', 'bab4', 'badgeCount', 'actions'];
       const key = keys[colIndex];
 
       const sorted = [...studentsData].sort((a, b) => {

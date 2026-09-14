@@ -4,15 +4,17 @@ Media pembelajaran interaktif berbasis web untuk mata pelajaran **Koding & Kecer
 
 ## 📋 Fitur
 
-- **Bab 1: Literasi Digital** — Game Swipe Safety (10 skenario keamanan digital)
-- **Bab 2: Struktur Data & Algoritma** — 8 Minigame interaktif:
+- **Bab 1: Literasi Digital** — Game Swipe Safety (15 skenario keamanan digital)
+- **Bab 2: Struktur Data & Algoritma** — 11 Minigame interaktif dengan ronde dan soal acak:
   - Stack (Push/Pop), Queue (Enqueue/Dequeue), Array Index Quiz
   - Linear Search, Binary Search
   - Bubble Sort, Selection Sort, Insertion Sort
+  - Bug Hunter Detective, Circuit & Gate Battles, AI Prompt Master
 - **Bab 3: Berpikir Komputasional** — Bot Navigator (3 level labirin)
 - **Bab 4: Dasar Pemrograman** — Fill Python Code (6 puzzle)
-- **Sistem Gamifikasi**: XP, Level, 12 Badge, Combo Multiplier
+- **Sistem Gamifikasi**: XP, Level, 15 Badge, Combo Multiplier
 - **Dashboard Guru**: Monitoring progress semua siswa
+- **Reset Progres Siswa**: Guru dapat menghapus XP, badge, dan progres game siswa dari tabel dashboard
 - **Dark/Light Mode**: Tema bisa diubah
 - **Responsive**: Bisa diakses dari HP, tablet, dan desktop
 

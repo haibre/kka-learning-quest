@@ -40,7 +40,9 @@ KKA.bab2 = {
     levels: [
       { target: ['merah', 'biru'] },
       { target: ['hijau', 'kuning', 'merah'] },
-      { target: ['ungu', 'biru', 'hijau', 'kuning'] }
+      { target: ['ungu', 'biru', 'hijau', 'kuning'] },
+      { target: ['kuning', 'merah', 'biru', 'hijau', 'ungu'] },
+      { target: ['biru', 'biru', 'merah', 'hijau', 'kuning', 'ungu'] }
     ],
     levelIdx: 0,
     currentStack: [],
@@ -119,7 +121,7 @@ KKA.bab2 = {
   },
 
   queue: {
-    levels: [3, 5, 7],
+    levels: [3, 5, 7, 4, 6, 8],
     levelIdx: 0,
     chars: ['👨', '👩', '👦', '👧', '🧑', '👴'],
     q: [],
@@ -192,7 +194,7 @@ KKA.bab2 = {
   array: {
     arr: [],
     questionCount: 0,
-    maxQuestions: 5,
+    maxQuestions: 10,
     qType: 0,
     qIndex: 0,
 
@@ -254,8 +256,15 @@ KKA.bab2 = {
     arr: [],
     target: 0,
     currentIndex: 0,
+    round: 0,
+    maxRounds: 5,
 
     init() {
+      this.round = 0;
+      this.startRound();
+    },
+
+    startRound() {
       this.arr = Array.from({ length: 8 }, function () { return Math.floor(Math.random() * 90) + 10; });
       this.target = this.arr[Math.floor(Math.random() * this.arr.length)];
       this.currentIndex = 0;
@@ -277,9 +286,15 @@ KKA.bab2 = {
         box.style.background = '#10b981';
         box.style.color = 'white';
         if (KKA.audio) KKA.audio.playCorrect();
+        this.round += 1;
+        const self = this;
         setTimeout(function () {
-          KKA.bab2.showCompletion('linear-content', 'Linear Search', 'linear-detective', 'linear');
-        }, 800);
+          if (self.round >= self.maxRounds) {
+            KKA.bab2.showCompletion('linear-content', 'Linear Search', 'linear-detective', 'linear');
+          } else {
+            self.startRound();
+          }
+        }, 500);
       } else {
         this.currentIndex += 1;
       }
@@ -294,7 +309,7 @@ KKA.bab2 = {
       container.innerHTML = [
         '<div style="background:white; padding:20px; border-radius:12px; text-align:center;">',
         '<h4>Linear Search memeriksa satu per satu dari awal. Kompleksitas: O(n)</h4>',
-        '<h3>Cari angka: <span style="color:#4f46e5;">' + this.target + '</span></h3>',
+        '<h3>Cari angka: <span style="color:#4f46e5;">' + this.target + '</span></h3><p>Ronde ' + (this.round + 1) + '/' + this.maxRounds + '</p>',
         '<div style="display:flex; justify-content:center; gap:10px; margin:20px 0; flex-wrap:wrap;">' + boxes + '</div>',
         '<button style="background:transparent; border:1px solid #ccc; padding:10px; cursor:pointer; border-radius:8px;" onclick="KKA.bab2.hint(-5)">Hint 💡</button>',
         '</div>'
@@ -307,8 +322,15 @@ KKA.bab2 = {
     target: 0,
     left: 0,
     right: 0,
+    round: 0,
+    maxRounds: 5,
 
     init() {
+      this.round = 0;
+      this.startRound();
+    },
+
+    startRound() {
       this.arr = Array.from({ length: 15 }, function () { return Math.floor(Math.random() * 90) + 10; }).sort(function (a, b) { return a - b; });
       this.target = this.arr[Math.floor(Math.random() * this.arr.length)];
       this.left = 0;
@@ -327,9 +349,15 @@ KKA.bab2 = {
       const val = this.arr[mid];
       if (val === this.target) {
         if (KKA.audio) KKA.audio.playCorrect();
+        this.round += 1;
+        const self = this;
         setTimeout(function () {
-          KKA.bab2.showCompletion('binary-content', 'Binary Search', 'binary-ninja', 'binary');
-        }, 800);
+          if (self.round >= self.maxRounds) {
+            KKA.bab2.showCompletion('binary-content', 'Binary Search', 'binary-ninja', 'binary');
+          } else {
+            self.startRound();
+          }
+        }, 500);
       } else if (val < this.target) {
         this.left = mid + 1;
         this.render();
@@ -352,7 +380,7 @@ KKA.bab2 = {
       container.innerHTML = [
         '<div style="background:white; padding:20px; border-radius:12px; text-align:center;">',
         '<h4>Binary Search memangkas 50% data di tiap langkah. Kompleksitas: O(log n)</h4>',
-        '<h3>Cari angka: <span style="color:#4f46e5;">' + this.target + '</span></h3>',
+        '<h3>Cari angka: <span style="color:#4f46e5;">' + this.target + '</span></h3><p>Ronde ' + (this.round + 1) + '/' + this.maxRounds + '</p>',
         '<div style="display:flex; justify-content:center; gap:5px; margin:20px 0; flex-wrap:wrap;">' + cells + '</div>',
         '<p>Range Aktif: Indeks ' + this.left + ' - ' + this.right + '</p>',
         '<button style="background:transparent; border:1px solid #ccc; padding:10px; cursor:pointer; border-radius:8px;" onclick="KKA.bab2.hint(-5)">Hint 💡</button>',
@@ -365,8 +393,15 @@ KKA.bab2 = {
     arr: [],
     idx: 0,
     sortedIdx: 6,
+    round: 0,
+    maxRounds: 3,
 
     init() {
+      this.round = 0;
+      this.startRound();
+    },
+
+    startRound() {
       this.arr = Array.from({ length: 6 }, function () { return Math.floor(Math.random() * 90) + 10; });
       this.idx = 0;
       this.sortedIdx = this.arr.length;
@@ -401,9 +436,15 @@ KKA.bab2 = {
       this.render();
       if (this.sortedIdx <= 1) {
         if (KKA.audio) KKA.audio.playCorrect();
+        this.round += 1;
+        const self = this;
         setTimeout(function () {
-          KKA.bab2.showCompletion('bubble-content', 'Bubble Sort', 'bubble-champion', 'bubble');
-        }, 800);
+          if (self.round >= self.maxRounds) {
+            KKA.bab2.showCompletion('bubble-content', 'Bubble Sort', 'bubble-champion', 'bubble');
+          } else {
+            self.startRound();
+          }
+        }, 500);
       }
     },
 
@@ -419,7 +460,7 @@ KKA.bab2 = {
 
       container.innerHTML = [
         '<div style="background:white; padding:20px; border-radius:12px; text-align:center;">',
-        '<h4>Bubble Sort: Elemen terbesar "menggelembung" ke atas.</h4>',
+        '<h4>Bubble Sort: Elemen terbesar "menggelembung" ke atas.</h4><p>Ronde ' + (this.round + 1) + '/' + this.maxRounds + '</p>',
         '<div style="display:flex; justify-content:center; align-items:flex-end; gap:10px; height:150px; margin:20px 0;">' + bars + '</div>',
         '<div style="display:flex; gap:10px; justify-content:center;">',
         '<button style="background:#ef4444; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer;" onclick="KKA.bab2.bubble.action(true)" ' + (this.sortedIdx <= 1 ? 'disabled' : '') + '>Tukar</button>',
@@ -434,8 +475,15 @@ KKA.bab2 = {
   selection: {
     arr: [],
     sortedIdx: 0,
+    round: 0,
+    maxRounds: 3,
 
     init() {
+      this.round = 0;
+      this.startRound();
+    },
+
+    startRound() {
       this.arr = Array.from({ length: 6 }, function () { return Math.floor(Math.random() * 90) + 10; });
       this.sortedIdx = 0;
       this.render();
@@ -458,9 +506,15 @@ KKA.bab2 = {
           this.sortedIdx = this.arr.length;
           this.render();
           if (KKA.audio) KKA.audio.playCorrect();
+          this.round += 1;
+          const self = this;
           setTimeout(function () {
-            KKA.bab2.showCompletion('selection-content', 'Selection Sort', 'selection-sniper', 'selection');
-          }, 800);
+            if (self.round >= self.maxRounds) {
+              KKA.bab2.showCompletion('selection-content', 'Selection Sort', 'selection-sniper', 'selection');
+            } else {
+              self.startRound();
+            }
+          }, 500);
         }
       } else {
         if (KKA.audio) KKA.audio.playWrong();
@@ -479,7 +533,7 @@ KKA.bab2 = {
       }).join('');
       container.innerHTML = [
         '<div style="background:white; padding:20px; border-radius:12px; text-align:center;">',
-        '<h4>Selection Sort: Cari nilai terkecil dari sisa data, lalu pindahkan.</h4>',
+        '<h4>Selection Sort: Cari nilai terkecil dari sisa data, lalu pindahkan.</h4><p>Ronde ' + (this.round + 1) + '/' + this.maxRounds + '</p>',
         '<p>Klik kotak dengan nilai TERKECIL di area ungu (belum terurut).</p>',
         '<div style="display:flex; justify-content:center; gap:10px; margin:20px 0; flex-wrap:wrap;">' + boxes + '</div>',
         '<button style="background:transparent; border:1px solid #ccc; padding:10px; cursor:pointer; border-radius:8px;" onclick="KKA.bab2.hint(-5)">Hint 💡</button>',
@@ -491,8 +545,15 @@ KKA.bab2 = {
   insertion: {
     arr: [],
     sortedCount: 1,
+    round: 0,
+    maxRounds: 3,
 
     init() {
+      this.round = 0;
+      this.startRound();
+    },
+
+    startRound() {
       this.arr = Array.from({ length: 6 }, function () { return Math.floor(Math.random() * 90) + 10; });
       this.sortedCount = 1;
       this.render();
@@ -516,9 +577,15 @@ KKA.bab2 = {
       this.render();
       if (this.sortedCount >= this.arr.length) {
         if (KKA.audio) KKA.audio.playCorrect();
+        this.round += 1;
+        const self = this;
         setTimeout(function () {
-          KKA.bab2.showCompletion('insertion-content', 'Insertion Sort', 'insertion-ace', 'insertion');
-        }, 800);
+          if (self.round >= self.maxRounds) {
+            KKA.bab2.showCompletion('insertion-content', 'Insertion Sort', 'insertion-ace', 'insertion');
+          } else {
+            self.startRound();
+          }
+        }, 500);
       }
     },
 
@@ -550,7 +617,7 @@ KKA.bab2 = {
       }).join('');
       container.innerHTML = [
         '<div style="background:white; padding:20px; border-radius:12px; text-align:center;">',
-        '<h4>Insertion Sort: Sisipkan kartu ke posisi yang tepat.</h4>',
+        '<h4>Insertion Sort: Sisipkan kartu ke posisi yang tepat.</h4><p>Ronde ' + (this.round + 1) + '/' + this.maxRounds + '</p>',
         '<p>Klik tanda <code>+</code> untuk menyisipkan <strong style="color:#ef4444; font-size:1.2em;">' + activeVal + '</strong></p>',
         '<div style="display:flex; justify-content:center; gap:5px; margin:20px 0; min-height:80px; align-items:center;">' + sortedHTML + '</div>',
         '<div style="display:flex; justify-content:center; gap:10px; opacity:0.5; margin-top:20px;">' + remaining + '</div>',

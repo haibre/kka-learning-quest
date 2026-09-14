@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 -- 2. Progress table (stores game progress as JSON)
 CREATE TABLE IF NOT EXISTS public.progress (
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
-  data JSONB NOT NULL DEFAULT '{"xp":0,"level":1,"combo":0,"maxCombo":0,"badges":[],"bab1":{"completed":false,"correct":0,"total":10,"scenarios":[]},"bab2":{"stack":false,"queue":false,"array":false,"linear":false,"binary":false,"bubble":false,"selection":false,"insertion":false},"bab3":{"completed":false,"levelsCompleted":[]},"bab4":{"completed":false,"correct":0,"total":6,"puzzles":[]}}',
+  data JSONB NOT NULL DEFAULT '{"xp":0,"level":1,"combo":0,"maxCombo":0,"badges":[],"bab1":{"completed":false,"correct":0,"total":15,"scenarios":[]},"bab2":{"stack":false,"queue":false,"array":false,"linear":false,"binary":false,"bubble":false,"selection":false,"insertion":false,"bughunter":false,"circuit":false,"prompt":false},"bab3":{"completed":false,"levelsCompleted":[]},"bab4":{"completed":false,"correct":0,"total":6,"puzzles":[]}}',
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -151,7 +151,11 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  IF NOT public.is_guru() THEN
+  IF auth.uid() IS NULL OR NOT EXISTS (
+    SELECT 1
+    FROM public.profiles AS teacher_profile
+    WHERE teacher_profile.id = auth.uid() AND teacher_profile.role = 'guru'
+  ) THEN
     RAISE EXCEPTION 'Akses hanya untuk guru';
   END IF;
 
@@ -166,6 +170,58 @@ $$;
 
 REVOKE ALL ON FUNCTION public.get_teacher_students() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.get_teacher_students() TO authenticated;
+
+-- Save student progress without relying on client-side progress RLS policies.
+CREATE OR REPLACE FUNCTION public.save_student_progress(progress_data JSONB)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND role = 'siswa'
+  ) THEN
+    RAISE EXCEPTION 'Akses hanya untuk akun siswa';
+  END IF;
+
+  INSERT INTO public.progress (user_id, data, updated_at)
+  VALUES (auth.uid(), progress_data, NOW())
+  ON CONFLICT (user_id)
+  DO UPDATE SET data = EXCLUDED.data, updated_at = NOW();
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.save_student_progress(JSONB) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.save_student_progress(JSONB) TO authenticated;
+
+-- Reset progress siswa dari dashboard guru tanpa menghapus akun atau profil.
+CREATE OR REPLACE FUNCTION public.reset_student_progress(student_id UUID)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND role = 'guru'
+  ) THEN
+    RAISE EXCEPTION 'Akses hanya untuk guru';
+  END IF;
+
+  DELETE FROM public.progress
+  WHERE user_id = student_id
+    AND EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE id = student_id AND role = 'siswa'
+    );
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.reset_student_progress(UUID) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.reset_student_progress(UUID) TO authenticated;
 
 -- 7. Function to update timestamp
 CREATE OR REPLACE FUNCTION public.update_timestamp()

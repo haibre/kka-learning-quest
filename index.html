@@ -48,6 +48,8 @@
       overflow-x: hidden;
     }
 
+    button, input { font: inherit; }
+
     #theme-toggle {
       position: fixed;
       top: 20px;
@@ -70,7 +72,8 @@
     .screen {
       display: none;
       min-height: 100vh;
-      padding: 20px;
+      width: 100%;
+      padding: clamp(16px, 3vw, 36px);
       overflow-y: auto;
     }
     .screen.active {
@@ -191,7 +194,7 @@
 
     /* Dashboard */
     .dashboard-container {
-      max-width: 800px;
+      width: min(100%, 1440px);
       margin: 0 auto;
     }
     .dashboard-header {
@@ -288,7 +291,7 @@
 
     /* Game Containers */
     .game-container {
-      max-width: 900px;
+      width: min(100%, 1440px);
       margin: 0 auto;
     }
     .game-header {
@@ -296,6 +299,7 @@
       align-items: center;
       gap: 15px;
       margin-bottom: 30px;
+      flex-wrap: wrap;
     }
     .game-score {
       margin-left: auto;
@@ -309,7 +313,7 @@
     /* Minigame Grid */
     .minigame-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
       gap: 15px;
     }
     .minigame-card {
@@ -555,6 +559,16 @@
     }
     .concept-card h4 { margin: 0 0 0.5rem; color: var(--accent); }
     .concept-card p { min-height: 3rem; }
+    .game-panel {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: clamp(16px, 3vw, 28px);
+      box-shadow: var(--shadow-sm);
+      color: var(--text);
+    }
+    .game-panel h3, .game-panel h4 { margin-bottom: 0.75rem; }
+    .game-options { display: grid; gap: 10px; margin-top: 18px; }
+    .game-options .btn { width: 100%; text-align: left; justify-content: flex-start; }
     .concept-options { display: grid; gap: 0.5rem; }
     .concept-option, .flow-block { text-align: left; white-space: normal; }
     .concept-option.correct { border-color: var(--secondary); background: rgba(0, 184, 148, 0.18); }
@@ -669,8 +683,18 @@
       .landing-title { font-size: 2rem; }
       .sort-bars { height: 150px; }
       .grid-cell { width: 55px; height: 55px; }
+      .game-header { margin-bottom: 18px; gap: 8px; }
+      .game-header h2 { font-size: 1.35rem; }
+      .game-score { margin-left: 0; }
     }
     @media (max-width: 480px) {
+      .screen { padding: 12px; }
+      .landing-subtitle { font-size: 1.1rem; }
+      .landing-desc { margin-bottom: 24px; }
+      .btn-lg { width: 100%; padding: 14px 18px; }
+      .dashboard-header { align-items: flex-start; flex-direction: column; }
+      .xp-info { gap: 8px; flex-wrap: wrap; }
+      .scenario-buttons, .summary-buttons { flex-direction: column; }
       .trophy-grid { grid-template-columns: repeat(2, 1fr); }
       .grid-cell { width: 45px; height: 45px; }
     }
@@ -761,7 +785,7 @@
           <div class="bab-icon">🎮</div>
           <h3>Bab 2</h3>
           <p>Struktur Data & Algoritma</p>
-          <p class="bab-subtitle">Arcade 8 Minigame</p>
+          <p class="bab-subtitle">Arcade 11 Minigame</p>
           <div class="bab-progress"><div id="progress-bab2" class="bab-progress-fill" style="width:0%"></div></div>
         </div>
         <div class="bab-card" onclick="KKA.ui.showScreen('screen-bab3')">
@@ -782,7 +806,7 @@
 
       <!-- Trophy Room Button -->
       <button class="btn btn-accent btn-block" onclick="KKA.ui.showScreen('screen-trophy')" style="margin-top:1rem">
-        🏆 Trophy Room — <span id="dash-badge-count">0</span>/12 Badge
+        🏆 Trophy Room — <span id="dash-badge-count">0</span>/15 Badge
       </button>
     </div>
   </div>
@@ -793,7 +817,7 @@
       <div class="game-header">
         <button class="btn btn-sm btn-back" onclick="KKA.ui.showScreen('screen-dashboard')">← Kembali</button>
         <h2>🛡️ Bab 1: Swipe Safety</h2>
-        <span class="game-score" id="bab1-score">0/10</span>
+        <span class="game-score" id="bab1-score">0/15</span>
       </div>
       <div id="bab1-content">
         <!-- Bab1 JS will populate this -->
@@ -832,6 +856,15 @@
         </div>
         <div class="minigame-card" onclick="KKA.ui.showScreen('screen-bab2-insertion')" id="mg-insertion">
           <span class="mg-icon">🃏</span><span class="mg-name">Insertion Sort</span><span class="mg-status" id="mg-insertion-status">⬜</span>
+        </div>
+        <div class="minigame-card" onclick="KKA.ui.showScreen('screen-bab2-bughunter')" id="mg-bughunter">
+          <span class="mg-icon">🐞</span><span class="mg-name">Bug Hunter</span><span class="mg-status" id="mg-bughunter-status">⬜</span>
+        </div>
+        <div class="minigame-card" onclick="KKA.ui.showScreen('screen-bab2-circuit')" id="mg-circuit">
+          <span class="mg-icon">⚡</span><span class="mg-name">Circuit Gates</span><span class="mg-status" id="mg-circuit-status">⬜</span>
+        </div>
+        <div class="minigame-card" onclick="KKA.ui.showScreen('screen-bab2-prompt')" id="mg-prompt">
+          <span class="mg-icon">🧠</span><span class="mg-name">AI Prompt Master</span><span class="mg-status" id="mg-prompt-status">⬜</span>
         </div>
       </div>
     </div>
@@ -925,6 +958,25 @@
     </div>
   </div>
 
+  <div id="screen-bab2-bughunter" class="screen">
+    <div class="game-container">
+      <div class="game-header"><button class="btn btn-sm btn-back" onclick="KKA.ui.showScreen('screen-bab2-hub')">← Kembali</button><h2>🐞 Bug Hunter Detective</h2></div>
+      <div id="bughunter-content"></div>
+    </div>
+  </div>
+  <div id="screen-bab2-circuit" class="screen">
+    <div class="game-container">
+      <div class="game-header"><button class="btn btn-sm btn-back" onclick="KKA.ui.showScreen('screen-bab2-hub')">← Kembali</button><h2>⚡ Circuit & Gate Battles</h2></div>
+      <div id="circuit-content"></div>
+    </div>
+  </div>
+  <div id="screen-bab2-prompt" class="screen">
+    <div class="game-container">
+      <div class="game-header"><button class="btn btn-sm btn-back" onclick="KKA.ui.showScreen('screen-bab2-hub')">← Kembali</button><h2>🧠 AI Prompt Master</h2></div>
+      <div id="prompt-content"></div>
+    </div>
+  </div>
+
   <!-- BAB 3: Bot Navigator -->
   <div id="screen-bab3" class="screen">
     <div class="game-container">
@@ -970,11 +1022,12 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
   <script src="js/audio.js"></script>
-  <script src="js/state.js?v=2"></script>
+  <script src="js/state.js?v=3"></script>
   <script src="js/auth.js?v=3"></script>
   <script src="js/ui.js?v=2"></script>
   <script src="js/bab1.js"></script>
   <script src="js/bab2.js?v=2"></script>
+  <script src="js/bab2-extra.js"></script>
   <script src="js/bab3.js?v=4"></script>
   <script src="js/bab4.js"></script>
   <script src="js/app.js?v=2"></script>

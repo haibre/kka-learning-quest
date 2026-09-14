@@ -61,6 +61,36 @@ KKA.bab1 = {
       answer: 'bahaya',
       explanation: '🚨 Aplikasi bajakan sering mengandung malware, spyware, atau virus. Selalu download dari Play Store/App Store resmi.',
       category: 'Download Aman'
+    },
+    {
+      text: 'Kamu memeriksa izin aplikasi dan menolak akses kamera untuk aplikasi kalkulator.',
+      answer: 'aman',
+      explanation: '✅ Izin aplikasi harus sesuai kebutuhan. Kalkulator tidak membutuhkan akses kamera.',
+      category: 'Izin Aplikasi'
+    },
+    {
+      text: 'Kamu membagikan lokasi rumah secara real-time di media sosial publik.',
+      answer: 'bahaya',
+      explanation: '🚨 Lokasi real-time dapat membahayakan privasi dan keamanan fisikmu.',
+      category: 'Privasi Data'
+    },
+    {
+      text: 'Sebelum meneruskan berita mengejutkan, kamu membandingkannya dengan sumber tepercaya.',
+      answer: 'aman',
+      explanation: '✅ Verifikasi silang membantu mencegah penyebaran hoaks dan informasi palsu.',
+      category: 'Literasi Informasi'
+    },
+    {
+      text: 'Kamu memasukkan password akun utama di komputer umum lalu membiarkannya tersimpan.',
+      answer: 'bahaya',
+      explanation: '🚨 Komputer umum dapat menyimpan sesi atau terkena keylogger. Selalu logout dan jangan simpan password.',
+      category: 'Keamanan Perangkat'
+    },
+    {
+      text: 'Kamu melaporkan akun yang melakukan cyberbullying dan menyimpan bukti percakapannya.',
+      answer: 'aman',
+      explanation: '✅ Menyimpan bukti dan melapor melalui kanal resmi adalah langkah tepat menghadapi cyberbullying.',
+      category: 'Etika Digital'
     }
   ],
   currentIndex: 0,
@@ -68,6 +98,7 @@ KKA.bab1 = {
   answered: false,
   
   init() {
+    KKA.state.data.bab1.total = this.scenarios.length;
     this.currentIndex = 0;
     this.correctCount = KKA.state.data.bab1.correct || 0;
     
@@ -77,7 +108,7 @@ KKA.bab1 = {
     }
     
     this.currentIndex = KKA.state.data.bab1.scenarios.length;
-    if (this.currentIndex >= 10) {
+    if (this.currentIndex >= this.scenarios.length) {
       this.showSummary();
       return;
     }
@@ -112,7 +143,7 @@ KKA.bab1 = {
       <div class="scenario-card" style="animation: slideIn 0.5s ease">
         <span class="scenario-category">${s.category}</span>
         <p class="scenario-text">${s.text}</p>
-        <div class="scenario-number">Skenario ${this.currentIndex + 1} dari 10</div>
+        <div class="scenario-number">Skenario ${this.currentIndex + 1} dari ${this.scenarios.length}</div>
         <div class="scenario-buttons">
           <button class="btn btn-safe" onclick="KKA.bab1.answer('aman')">✅ AMAN</button>
           <button class="btn btn-danger-choice" onclick="KKA.bab1.answer('bahaya')">❌ BAHAYA</button>
@@ -120,7 +151,7 @@ KKA.bab1 = {
       </div>
     `;
     const scoreElem = document.getElementById('bab1-score');
-    if (scoreElem) scoreElem.textContent = `${this.correctCount}/10`;
+    if (scoreElem) scoreElem.textContent = `${this.correctCount}/${this.scenarios.length}`;
   },
   
   answer(choice) {
@@ -160,13 +191,13 @@ KKA.bab1 = {
       </div>
     `;
     const scoreElem = document.getElementById('bab1-score');
-    if (scoreElem) scoreElem.textContent = `${this.correctCount}/10`;
+    if (scoreElem) scoreElem.textContent = `${this.correctCount}/${this.scenarios.length}`;
   },
   
   next() {
     this.answered = false;
     this.currentIndex++;
-    if (this.currentIndex >= 10) {
+    if (this.currentIndex >= this.scenarios.length) {
       KKA.state.data.bab1.completed = true;
       KKA.state.save();
       if (this.correctCount >= 8) {
@@ -180,13 +211,13 @@ KKA.bab1 = {
   
   showSummary() {
     const container = document.getElementById('bab1-content');
-    const percentage = Math.round((this.correctCount / 10) * 100);
+    const percentage = Math.round((this.correctCount / this.scenarios.length) * 100);
     const stars = this.correctCount >= 9 ? '⭐⭐⭐' : this.correctCount >= 7 ? '⭐⭐' : '⭐';
     container.innerHTML = `
       <div class="summary-card" style="animation: scaleIn 0.5s ease">
         <h3>🎉 Bab 1 Selesai!</h3>
         <div class="summary-stars">${stars}</div>
-        <div class="summary-score">${this.correctCount}/10 Benar (${percentage}%)</div>
+        <div class="summary-score">${this.correctCount}/${this.scenarios.length} Benar (${percentage}%)</div>
         <p>${this.correctCount >= 8 ? '🛡️ Badge Digital Guardian diraih!' : 'Butuh minimal 8 benar untuk badge. Coba lagi!'}</p>
         <div class="summary-buttons">
           <button class="btn btn-primary" style="background: #4f46e5; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;" onclick="KKA.ui.showScreen('screen-dashboard')">Kembali ke Dashboard</button>
@@ -197,7 +228,7 @@ KKA.bab1 = {
   },
   
   reset() {
-    KKA.state.data.bab1 = { completed: false, correct: 0, total: 10, scenarios: [] };
+    KKA.state.data.bab1 = { completed: false, correct: 0, total: this.scenarios.length, scenarios: [] };
     KKA.state.save();
     this.currentIndex = 0;
     this.correctCount = 0;

@@ -32,6 +32,9 @@ KKA.config = {
     { id: 'bubble-champion', name: 'Bubble Champion', emoji: '🫧', desc: 'Selesaikan Bubble Sort', bab: 2 },
     { id: 'selection-sniper', name: 'Selection Sniper', emoji: '🎯', desc: 'Selesaikan Selection Sort', bab: 2 },
     { id: 'insertion-ace', name: 'Insertion Ace', emoji: '🃏', desc: 'Selesaikan Insertion Sort', bab: 2 },
+    { id: 'bug-hunter', name: 'Bug Hunter', emoji: '🐞', desc: 'Temukan semua bug algoritma', bab: 2 },
+    { id: 'circuit-master', name: 'Circuit Master', emoji: '⚡', desc: 'Selesaikan puzzle gerbang logika', bab: 2 },
+    { id: 'prompt-master', name: 'Prompt Master', emoji: '🧠', desc: 'Pilih prompt AI paling tepat', bab: 2 },
     { id: 'bot-commander', name: 'Bot Commander', emoji: '🤖', desc: 'Selesaikan Bot Navigator', bab: 3 },
     { id: 'python-coder', name: 'Python Coder', emoji: '🐍', desc: 'Selesaikan semua puzzle Python', bab: 4 },
     { id: 'kka-legend', name: 'KKA Legend', emoji: '👑', desc: 'Raih semua badge lainnya', bab: 0 }
